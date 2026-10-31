@@ -9,9 +9,4 @@
     <PackageReference Include="MediatR.Contracts" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Entities\" />
-    <Folder Include="Enum\" />
-  </ItemGroup>
-
 </Project>
