@@ -2,6 +2,7 @@
 using KaizenBoard.Infrastructure.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -41,7 +42,7 @@ public class ApplicationDbContextInitialiser
         {
             // Пока схема простая — создаём напрямую.
             // TODO (фаза 2): перейти на EF-миграции: dotnet ef migrations add <name>
-            await _context.Database.EnsureCreatedAsync();
+            await _context.Database.MigrateAsync();
         }
         catch (Exception ex)
         {

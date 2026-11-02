@@ -10,7 +10,7 @@ public class Suggestion: BaseAuditableEntity
 {
     public string? RegistrationNumber { get; set; }
     public Guid? TemplateId { get; set; }
-    public Guid TargetDepartmentID { get; set; }
+    public Guid TargetDepartmentId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string ImprovementObject { get; set; } = string.Empty;
     public string CurrentFlaws { get; set; } = string.Empty;
@@ -21,7 +21,7 @@ public class Suggestion: BaseAuditableEntity
     public DateTime? StatusDeadlineAt { get; set; }
     public string? CommissionNote { get; set; } = string.Empty;
     public Guid? HelperDepartmentId { get; set; }
-    public Guid? ImplementerUserId { get; set; }
+    public string? ImplementerUserId { get; set; }
     public DateTime? ImplementationDeadline  { get; set; }
     public bool HasEconomicEffect { get; set; }
     public decimal? ImplementationCost { get; set; }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace KaizenBoard.Domain.Entities;
 
-public class Template
+public class Template : BaseAuditableEntity
 {
     public string Type { get; set; } = string.Empty;
     public Guid? DepartmentId { get; set; }
