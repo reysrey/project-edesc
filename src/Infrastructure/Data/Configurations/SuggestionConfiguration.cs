@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using KaizenBoard.Domain.Entities;
+using KaizenBoard.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,6 +19,7 @@ public void Configure(EntityTypeBuilder<Suggestion> builder)
         builder.Property(t => t.EconomicEffectAmount).HasPrecision(18, 2);
         builder.Property(t => t.ImplementationCost).HasPrecision(18, 2);
         builder.Property(t => t.RewardAmount).HasPrecision(18, 2);
+        builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(s => s.ImplementerUserId);
 
         builder.HasOne<Department>()
                .WithMany()

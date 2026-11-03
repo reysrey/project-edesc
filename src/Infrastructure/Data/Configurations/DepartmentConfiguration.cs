@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using KaizenBoard.Domain.Entities;
+using KaizenBoard.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,5 +13,9 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
     public void Configure(EntityTypeBuilder<Department> builder)
     {
         builder.Property(d => d.Name).HasMaxLength(200).IsRequired();
+        builder.HasOne<ApplicationUser>()
+               .WithMany()
+               .HasForeignKey(d => d.HeadUserId)
+               .OnDelete(DeleteBehavior.SetNull);
     }
 }
