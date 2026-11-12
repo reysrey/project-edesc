@@ -40,8 +40,6 @@ public class ApplicationDbContextInitialiser
     {
         try
         {
-            // Пока схема простая — создаём напрямую.
-            // TODO (фаза 2): перейти на EF-миграции: dotnet ef migrations add <name>
             await _context.Database.MigrateAsync();
         }
         catch (Exception ex)
