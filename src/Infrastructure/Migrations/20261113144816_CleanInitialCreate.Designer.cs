@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KaizenBoard.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261113095903_AddTemplates")]
-    partial class AddTemplates
+    [Migration("20261113144816_CleanInitialCreate")]
+    partial class CleanInitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -57,6 +57,9 @@ namespace KaizenBoard.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("HeadUserId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Departments");
                 });
@@ -200,9 +203,8 @@ namespace KaizenBoard.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

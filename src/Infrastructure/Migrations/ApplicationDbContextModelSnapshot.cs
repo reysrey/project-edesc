@@ -55,6 +55,9 @@ namespace KaizenBoard.Infrastructure.Migrations
 
                     b.HasIndex("HeadUserId");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("Departments");
                 });
 
@@ -197,9 +200,8 @@ namespace KaizenBoard.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

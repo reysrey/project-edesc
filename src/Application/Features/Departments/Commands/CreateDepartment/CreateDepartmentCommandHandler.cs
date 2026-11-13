@@ -20,7 +20,7 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
         var exists = await _context.Departments.AnyAsync(d => d.Name == request.Name, cancellationToken);
         if (exists)
         {
-            throw new ValidationException("Department with this name already exists.");
+            throw new InvalidOperationException("Подразделение с таким названием уже существует.");
         }
 
         var entity = new Department

@@ -1,10 +1,11 @@
-﻿using MediatR;
+﻿using KaizenBoard.Domain.Enums;
+using MediatR;
 
 namespace KaizenBoard.Application.Features.Templates.Commands.CreateTemplate;
 
 public class CreateTemplateCommand : IRequest<Guid>
 {
-    public string Type { get; init; } = string.Empty;
+    public TemplateType Type { get; init; }
     public Guid? DepartmentId { get; init; }
     public string ImprovementObject { get; init; } = string.Empty;
     public string Title { get; init; } = string.Empty;

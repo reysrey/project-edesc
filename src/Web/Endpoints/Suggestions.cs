@@ -39,9 +39,10 @@ public class Suggestions : IEndpointGroup
         await sender.Send(new SubmitSuggestionCommand {Id = id});
         return TypedResults.NoContent();
     }
-    public static async Task<NoContent> ApproveByManager(ISender sender, Guid id)
+    public static async Task<NoContent> ApproveByManager(ISender sender, Guid id, ApproveByManagerCommand command)
     {
-        await sender.Send(new ApproveByManagerCommand { Id = id });
+        command.Id = id;
+        await sender.Send(command);
         return TypedResults.NoContent();
     }
 

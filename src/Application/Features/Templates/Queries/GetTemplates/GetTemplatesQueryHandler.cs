@@ -17,6 +17,7 @@ public class GetTemplatesQueryHandler : IRequestHandler<GetTemplatesQuery, List<
     {
         return await _context.Templates
             .AsNoTracking()
+            .Where(t => t.IsActive)
             .Select(t => new TemplateDto
             {
                 Id = t.Id,
@@ -28,6 +29,7 @@ public class GetTemplatesQueryHandler : IRequestHandler<GetTemplatesQuery, List<
                 SolutionHint = t.SolutionHint,
                 IsActive = t.IsActive
             })
+            
             .ToListAsync(cancellationToken);
     }
 }

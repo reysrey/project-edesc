@@ -17,5 +17,6 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
                .WithMany()
                .HasForeignKey(d => d.HeadUserId)
                .OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(d => d.Name).IsUnique();
     }
 }

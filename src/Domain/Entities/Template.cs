@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using KaizenBoard.Domain.Enums;
 
 namespace KaizenBoard.Domain.Entities;
 
 public class Template : BaseAuditableEntity
 {
-    public string Type { get; set; } = string.Empty;
+    public TemplateType Type { get; set; }
     public Guid? DepartmentId { get; set; }
     public string ImprovementObject { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;

@@ -1,9 +1,11 @@
-﻿namespace KaizenBoard.Application.Features.Templates.Queries.GetTemplates;
+﻿using KaizenBoard.Domain.Enums;
+
+namespace KaizenBoard.Application.Features.Templates.Queries.GetTemplates;
 
 public class TemplateDto
 {
     public Guid Id { get; set; }
-    public string Type { get; set; } = string.Empty;
+    public TemplateType Type { get; set; }
     public Guid? DepartmentId { get; set; }
     public string ImprovementObject { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;

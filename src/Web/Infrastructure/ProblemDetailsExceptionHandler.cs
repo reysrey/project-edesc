@@ -1,6 +1,7 @@
 ﻿using KaizenBoard.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace KaizenBoard.Web.Infrastructure;
 
@@ -46,6 +47,11 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                 Title = "InvalidOperation",
                 Type = "https://tools.ietf.org/html/rfc9110#section-15.5.10",
                 Detail = exception.Message
+            }),
+            DbUpdateException => (StatusCodes.Status409Conflict, new ProblemDetails 
+            { Status = 409, 
+                Title = "Conflict", 
+                Detail = "Запись с такими данными уже существует." 
             }),
             ArgumentException => (StatusCodes.Status400BadRequest, new ProblemDetails
             {

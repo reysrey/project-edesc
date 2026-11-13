@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KaizenBoard.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class CleanInitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,7 +31,7 @@ namespace KaizenBoard.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Type = table.Column<string>(type: "text", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
                     DepartmentId = table.Column<Guid>(type: "uuid", nullable: true),
                     ImprovementObject = table.Column<string>(type: "text", nullable: false),
                     Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
@@ -280,6 +280,12 @@ namespace KaizenBoard.Infrastructure.Migrations
                 name: "IX_Departments_HeadUserId",
                 table: "Departments",
                 column: "HeadUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Departments_Name",
+                table: "Departments",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Suggestions_ImplementerUserId",
