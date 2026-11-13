@@ -40,7 +40,22 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                 Title = "Forbidden",
                 Type = "https://tools.ietf.org/html/rfc9110#section-15.5.4"
             }),
+            InvalidOperationException => (StatusCodes.Status409Conflict, new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "InvalidOperation",
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+                Detail = exception.Message
+            }),
+            ArgumentException => (StatusCodes.Status400BadRequest, new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Argument",
+                Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+                Detail = exception.Message
+            }),
             _ => (-1, null)
+
         };
 
         if (problemDetails is null) return false;

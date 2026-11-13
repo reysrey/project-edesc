@@ -59,6 +59,7 @@ public class Suggestion: BaseAuditableEntity
             throw new ArgumentException("Необходимо указать причину возврата.", nameof(reason));
 
         Status = SuggestionStatus.ReturnedByManager;
+        StatusDeadlineAt = null;
         CommissionNote = reason;
     }
 

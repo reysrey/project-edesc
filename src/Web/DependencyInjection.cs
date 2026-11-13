@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Infrastructure.Data;
 using KaizenBoard.Web.Services;
@@ -29,6 +30,8 @@ public static class DependencyInjection
             options.AddOperationTransformer<IdentityApiOperationTransformer>();
             options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
+        builder.Services.ConfigureHttpJsonOptions(options => 
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         builder.Services.AddCors();
     }
