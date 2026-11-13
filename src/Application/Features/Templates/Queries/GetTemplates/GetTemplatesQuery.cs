@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using MediatR;
 
-namespace KaizenBoard.Application.Features.Suggestions.Queries.GetTemplates;
+namespace KaizenBoard.Application.Features.Templates.Queries.GetTemplates;
 
-internal class GetTemplatesQuery
+public class GetTemplatesQuery : IRequest<List<TemplateDto>>
 {
 }
