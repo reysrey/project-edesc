@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace KaizenBoard.Application.Features.Departments.Queries.GetDepartments;
 
-namespace KaizenBoard.Application.Features.Suggestions.Queries.GetDepartments;
-
-internal class DepartmentDto
+public class DepartmentDto
 {
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? HeadUserId { get; set; }
+    public int EmployeesCount { get; set; }
 }

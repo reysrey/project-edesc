@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using MediatR;
 
-namespace KaizenBoard.Application.Features.Suggestions.Queries.GetDepartments;
+namespace KaizenBoard.Application.Features.Departments.Queries.GetDepartments;
 
-internal class GetDepartmentsQuery
+public class GetDepartmentsQuery : IRequest<List<DepartmentDto>>
 {
 }
