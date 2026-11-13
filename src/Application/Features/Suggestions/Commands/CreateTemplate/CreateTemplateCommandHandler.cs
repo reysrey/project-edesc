@@ -1,9 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using KaizenBoard.Application.Common.Interfaces;
+using KaizenBoard.Domain.Entities;
+using MediatR;
 
-namespace KaizenBoard.Application.Features.Suggestions.Commands.CreateTemplate;
+namespace KaizenBoard.Application.Features.Templates.Commands.CreateTemplate;
 
-internal class CreateTemplateCommandHandler
+public class CreateTemplateCommandHandler : IRequestHandler<CreateTemplateCommand, Guid>
 {
+    private readonly IApplicationDbContext _context;
+
+    public CreateTemplateCommandHandler(IApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Guid> Handle(CreateTemplateCommand request, CancellationToken cancellationToken)
+    {
+        var entity = new Template
+        {
+            Type = request.Type,
+            DepartmentId = request.DepartmentId,
+            ImprovementObject = request.ImprovementObject,
+            Title = request.Title,
+            ProblemHint = request.ProblemHint,
+            SolutionHint = request.SolutionHint,
+            IsActive = request.IsActive
+        };
+
+        _context.Templates.Add(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return entity.Id;
+    }
 }
