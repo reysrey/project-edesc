@@ -8,17 +8,17 @@ public class Departments : IEndpointGroup
 {
     public static void Map(RouteGroupBuilder groupBuilder)
     {
-        groupBuilder.MapPost(CreateDepartmentCommand, "/");
-        groupBuilder.MapGet(GetDepartmentsQuery, "/");
+        groupBuilder.MapPost(CreateDepartment, "/");
+        groupBuilder.MapGet(GetDepartments, "/");
     }
 
-    public static async Task<Created<Guid>> CreateDepartmentCommand(ISender sender, CreateDepartmentCommand command)
+    public static async Task<Created<Guid>> CreateDepartment(ISender sender, CreateDepartmentCommand command)
     {
         var id = await sender.Send(command);
         return TypedResults.Created($"/api/departments/{id}", id);
     }
 
-    public static async Task<Ok<List<DepartmentDto>>> GetDepartmentsQuery(ISender sender)
+    public static async Task<Ok<List<DepartmentDto>>> GetDepartments(ISender sender)
     {
         var list = await sender.Send(new GetDepartmentsQuery());
         return TypedResults.Ok(list);

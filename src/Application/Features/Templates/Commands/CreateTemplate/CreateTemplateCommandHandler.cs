@@ -23,7 +23,7 @@ public class CreateTemplateCommandHandler : IRequestHandler<CreateTemplateComman
             Title = request.Title,
             ProblemHint = request.ProblemHint,
             SolutionHint = request.SolutionHint,
-            IsActive = request.IsActive
+            IsActive = true
         };
 
         _context.Templates.Add(entity);

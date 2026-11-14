@@ -1,4 +1,5 @@
-﻿using KaizenBoard.Application.Common.Exceptions;
+﻿using System.Text.Json;
+using KaizenBoard.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,12 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                 Title = "Forbidden",
                 Type = "https://tools.ietf.org/html/rfc9110#section-15.5.4"
             }),
+            BadHttpRequestException => (StatusCodes.Status400BadRequest, new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Bad Request",
+                Detail = "Не удалось прочитать тело запроса. Проверьте JSON и значения полей."
+            }),
             InvalidOperationException => (StatusCodes.Status409Conflict, new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,
@@ -52,6 +59,11 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
             { Status = 409, 
                 Title = "Conflict", 
                 Detail = "Запись с такими данными уже существует." 
+            }),
+            JsonException => (StatusCodes.Status400BadRequest, new ProblemDetails 
+            { Status = 400, 
+                Title = "Bad Request", 
+                Detail = "Некорректный формат JSON" 
             }),
             ArgumentException => (StatusCodes.Status400BadRequest, new ProblemDetails
             {

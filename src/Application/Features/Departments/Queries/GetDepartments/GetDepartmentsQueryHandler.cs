@@ -24,6 +24,7 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, L
                 HeadUserId = d.HeadUserId,
                 EmployeesCount = d.EmployeesCount
             })
+            .OrderBy(d => d.Name)
             .ToListAsync(cancellationToken);
     }
 }

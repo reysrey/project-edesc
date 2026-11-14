@@ -15,14 +15,14 @@ public class Suggestions : IEndpointGroup
     public static void Map(RouteGroupBuilder groupBuilder)
     {
 
-        groupBuilder.MapPost(CreateSuggestionCommand, "/");
+        groupBuilder.MapPost(CreateSuggestion, "/");
         groupBuilder.MapGet(GetSuggestions, "/");
         groupBuilder.MapPost(SubmitSuggestion, "{id}/submit");
         groupBuilder.MapPost(ApproveByManager, "{id}/approve");
         groupBuilder.MapPost(ReturnByManager, "{id}/return");
     }
 
-    public static async Task<Created<Guid>> CreateSuggestionCommand(ISender sender, CreateSuggestionCommand command)
+    public static async Task<Created<Guid>> CreateSuggestion(ISender sender, CreateSuggestionCommand command)
     {
         var id = await sender.Send(command);
         return TypedResults.Created($"/api/suggestions/{id}", id);
@@ -46,9 +46,10 @@ public class Suggestions : IEndpointGroup
         return TypedResults.NoContent();
     }
 
-    public static async Task<NoContent> ReturnByManager(ISender sender, Guid id)
+    public static async Task<NoContent> ReturnByManager(ISender sender, Guid id, ReturnByManagerCommand command)
     {
-        await sender.Send(new ReturnByManagerCommand { Id = id });
+        command.Id = id;
+        await sender.Send(command);
         return TypedResults.NoContent();
     }
 }

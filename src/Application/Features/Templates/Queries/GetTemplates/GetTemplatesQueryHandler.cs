@@ -29,7 +29,7 @@ public class GetTemplatesQueryHandler : IRequestHandler<GetTemplatesQuery, List<
                 SolutionHint = t.SolutionHint,
                 IsActive = t.IsActive
             })
-            
+            .OrderBy(t => t.Title)
             .ToListAsync(cancellationToken);
     }
 }

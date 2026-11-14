@@ -11,7 +11,7 @@ public class CreateTemplateCommandValidator : AbstractValidator<CreateTemplateCo
             .MaximumLength(200).WithMessage("Title must not exceed 200 characters.");
 
         RuleFor(v => v.Type)
-            .NotEmpty().WithMessage("Type is required.");
+            .IsInEnum().WithMessage("Недопустимый тип шаблона");
 
         RuleFor(v => v.ImprovementObject)
             .NotEmpty().WithMessage("ImprovementObject is required.");
