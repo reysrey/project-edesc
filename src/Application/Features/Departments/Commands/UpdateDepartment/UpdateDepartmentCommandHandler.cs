@@ -1,4 +1,5 @@
 ﻿using KaizenBoard.Application.Common.Interfaces;
+using KaizenBoard.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +21,7 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
 
         if (entity == null)
         {
-            throw new Exception($"Цех с идентификатором {request.Id} не найден.");
+            throw new NotFoundException(nameof(Department), request.Id.ToString());
         }
 
         entity.Name = request.Name;

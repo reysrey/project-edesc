@@ -1,4 +1,5 @@
 ﻿using KaizenBoard.Application.Common.Interfaces;
+using KaizenBoard.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +21,7 @@ public class ArchiveTemplateCommandHandler : IRequestHandler<ArchiveTemplateComm
 
         if (entity == null)
         {
-            throw new Exception($"Шаблон с идентификатором {request.Id} не найден.");
+            throw new NotFoundException(nameof(Template), request.Id.ToString());
         }
 
         entity.IsActive = false; // Мягкое удаление (архивация)
