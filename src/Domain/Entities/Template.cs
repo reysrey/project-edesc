@@ -15,4 +15,9 @@ public class Template : BaseAuditableEntity
     public string SolutionHint { get; set; } = string.Empty;
     public bool IsActive { get; set; }
 
+    public void Archive()
+    {
+        IsActive = false;
+    }
+
 }
