@@ -1,8 +1,10 @@
-﻿using KaizenBoard.Domain.Enums;
+﻿using KaizenBoard.Application.Common.Security;
+using KaizenBoard.Domain.Enums;
 using MediatR;
 
 namespace KaizenBoard.Application.Features.Templates.Commands.CreateTemplate;
 
+[Authorize(Roles = "AdminL1,AdminL2")]
 public class CreateTemplateCommand : IRequest<Guid>
 {
     public TemplateType Type { get; init; }

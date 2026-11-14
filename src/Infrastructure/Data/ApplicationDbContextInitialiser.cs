@@ -64,23 +64,53 @@ public class ApplicationDbContextInitialiser
 
     public async Task TrySeedAsync()
     {
-        // Default roles
-        var administratorRole = new IdentityRole(Roles.Administrator);
+        var roles = new[] { Roles.AdminL1, Roles.AdminL2, Roles.User };
 
-        if (_roleManager.Roles.All(r => r.Name != administratorRole.Name))
+        foreach (var role in roles)
         {
-            await _roleManager.CreateAsync(administratorRole);
+            if (!await _roleManager.RoleExistsAsync(role))
+            {
+                var roleResult = await _roleManager.CreateAsync(new IdentityRole(role));
+                if (!roleResult.Succeeded)
+                {
+                    _logger.LogError("Не удалось создать роль {Role}: {Errors}", role,
+                        string.Join("; ", roleResult.Errors.Select(e => e.Description)));
+                }
+            }
         }
 
-        // Default users
-        var administrator = new ApplicationUser { UserName = "administrator@localhost", Email = "administrator@localhost" };
+        var adminEmail = "admin@localhost";
+        var adminUser = await _userManager.FindByEmailAsync(adminEmail);
 
-        if (_userManager.Users.All(u => u.UserName != administrator.UserName))
+        if (adminUser == null)
         {
-            await _userManager.CreateAsync(administrator, "Administrator1!");
-            if (!string.IsNullOrWhiteSpace(administratorRole.Name))
+            adminUser = new ApplicationUser
             {
-                await _userManager.AddToRolesAsync(administrator, new[] { administratorRole.Name });
+                UserName = adminEmail,
+                Email = adminEmail,
+                FullName = "Главный Администратор",
+                Position = "Админ"
+            };
+
+            var createResult = await _userManager.CreateAsync(adminUser, "Admin123!");
+
+            if (!createResult.Succeeded)
+            {
+                _logger.LogError("Не удалось создать администратора: {Errors}",
+                    string.Join("; ", createResult.Errors.Select(e => e.Description)));
+                return;
+            }
+        }
+
+        // Роль назначаем всегда, даже если пользователь уже существовал:
+        // иначе пользователь, созданный раньше, останется без прав.
+        if (!await _userManager.IsInRoleAsync(adminUser, Roles.AdminL1))
+        {
+            var roleResult = await _userManager.AddToRoleAsync(adminUser, Roles.AdminL1);
+            if (!roleResult.Succeeded)
+            {
+                _logger.LogError("Не удалось назначить роль {Role}: {Errors}", Roles.AdminL1,
+                    string.Join("; ", roleResult.Errors.Select(e => e.Description)));
             }
         }
     }

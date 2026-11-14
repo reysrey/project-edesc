@@ -33,22 +33,17 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
-        builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultScheme = IdentityConstants.ApplicationScheme;
-                options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-            })
-            .AddIdentityCookies();
-
         builder.Services.AddAuthorizationBuilder();
 
+        // AddIdentityApiEndpoints регистрирует сразу две схемы входа — cookie и Bearer —
+        // и делает их общими по умолчанию. Без этого [Authorize] проверяет только cookie,
+        // а заголовок Authorization: Bearer игнорируется.
         builder.Services
-            .AddIdentityCore<ApplicationUser>()
+            .AddIdentityApiEndpoints<ApplicationUser>(_ => { })
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
-            .AddDefaultTokenProviders()
-            .AddApiEndpoints();
+            .AddDefaultTokenProviders();
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();

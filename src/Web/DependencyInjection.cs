@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Infrastructure.Data;
 using KaizenBoard.Web.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -23,7 +24,6 @@ public static class DependencyInjection
             options.SuppressModelStateInvalidFilter = true);
 
         builder.Services.AddEndpointsApiExplorer();
-
         builder.Services.AddOpenApi(options =>
         {
             options.AddOperationTransformer<ApiExceptionOperationTransformer>();

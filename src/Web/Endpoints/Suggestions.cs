@@ -14,7 +14,7 @@ public class Suggestions : IEndpointGroup
 {
     public static void Map(RouteGroupBuilder groupBuilder)
     {
-
+        groupBuilder.RequireAuthorization();
         groupBuilder.MapPost(CreateSuggestion, "/");
         groupBuilder.MapGet(GetSuggestions, "/");
         groupBuilder.MapPost(SubmitSuggestion, "{id}/submit");

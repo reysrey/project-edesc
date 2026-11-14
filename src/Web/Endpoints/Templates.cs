@@ -9,6 +9,7 @@ public class Templates : IEndpointGroup
 {
     public static void Map(RouteGroupBuilder groupBuilder)
     {
+        groupBuilder.RequireAuthorization();
         groupBuilder.MapPost(CreateTemplate, "/");
         groupBuilder.MapGet(GetTemplates, "/");
     }

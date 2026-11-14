@@ -7,9 +7,11 @@ namespace KaizenBoard.Domain.UnitTests.Constants;
 public class RolesTests
 {
     [Test]
-    public void AdministratorRoleName_IsStable()
+    public void RoleNames_AreStable()
     {
-        // Роль используется в сиде БД и в тестах — имя менять нельзя без миграции данных
-        Roles.Administrator.ShouldBe("Administrator");
+        // Роли используются в сиде БД и в атрибутах [Authorize] — имена менять нельзя без миграции данных.
+        Roles.User.ShouldBe("User");
+        Roles.AdminL1.ShouldBe("AdminL1");
+        Roles.AdminL2.ShouldBe("AdminL2");
     }
 }

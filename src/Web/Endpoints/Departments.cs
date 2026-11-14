@@ -8,6 +8,7 @@ public class Departments : IEndpointGroup
 {
     public static void Map(RouteGroupBuilder groupBuilder)
     {
+        groupBuilder.RequireAuthorization();
         groupBuilder.MapPost(CreateDepartment, "/");
         groupBuilder.MapGet(GetDepartments, "/");
     }

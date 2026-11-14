@@ -24,6 +24,13 @@ internal sealed class ApiExceptionOperationTransformer : IOpenApiOperationTransf
         {
             operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
             operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
+
+            // Помечаем операцию как требующую Bearer-токен, чтобы Scalar подставлял его в запрос.
+            operation.Security ??= [];
+            operation.Security.Add(new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference("Bearer", context.Document)] = []
+            });
         }
 
         return Task.CompletedTask;
