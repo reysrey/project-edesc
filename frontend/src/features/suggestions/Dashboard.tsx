@@ -1,75 +1,78 @@
-import { Status } from './Status'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useOutletContext } from 'react-router-dom'
 import type { Profile, Template } from '../../shared/api/contracts'
 import { api } from '../../shared/api/resources'
 import { Empty, ErrorMessage, Loading } from '../../shared/ui/Feedback'
-import { formatDate } from '../../shared/lib/format'
-import { useSuggestions } from './model'
+import { Unavailable } from '../../shared/ui/Unavailable'
 import { SuggestionForm } from './SuggestionForm'
+import { SuggestionsPage } from './SuggestionsPage'
 
+const directions = [
+  ['Модернизация', '⚙', 'Оборудование, инструменты и новые способы работы'],
+  ['Сокращение времени', '◷', 'Устранение лишних действий и ожидания'],
+  ['Безопасность', '✳', 'Рабочая среда, риски и профилактика'],
+  ['Качество', '◇', 'Стабильность результата и снижение брака'],
+  ['Экономия ресурсов', '↘', 'Материалы, энергия и рациональное использование'],
+  ['Другое', '＋', 'Любые идеи, которые делают работу лучше'],
+] as const
 export function Dashboard() {
   const profile = useOutletContext<Profile>()
-  const suggestions = useSuggestions()
   const templates = useQuery({
     queryKey: ['templates'],
     queryFn: ({ signal }) => api.templates(signal),
   })
-  const [form, setForm] = useState<{ template?: Template }>()
-  const data = suggestions.data ?? []
-  const recent = [...data]
-    .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
-    .slice(0, 4)
+  const [form, setForm] = useState<{ template?: Template; initialObject?: string }>()
   return (
     <>
       <section className="welcome">
         <div>
-          <div className="eyebrow">КАЖДАЯ ИДЕЯ ИМЕЕТ ЗНАЧЕНИЕ</div>
+          <div className="eyebrow">ЛИЧНЫЙ КАБИНЕТ · СОТРУДНИК</div>
           <h1>
             {profile.fullName
-              ? `Здравствуйте, ${profile.fullName.split(' ')[0]}!`
+              ? `Добрый день, ${profile.fullName.split(' ')[0]}!`
               : 'Хороший день для новой идеи'}
           </h1>
-          <p>Замечайте возможности. Предлагайте решения. Меняйте работу к лучшему.</p>
+          <p>Ваши наблюдения могут сделать работу предприятия лучше.</p>
         </div>
         <button className="btn btn-primary" onClick={() => setForm({})}>
           ＋ Предложить идею
         </button>
       </section>
-      {suggestions.isPending ? (
-        <Loading />
-      ) : suggestions.error ? (
-        <>
-          <ErrorMessage error={suggestions.error} />
-          <button className="btn btn-line" onClick={() => void suggestions.refetch()}>
-            Повторить
-          </button>
-        </>
-      ) : (
-        <div className="stats dashboard-stats">
-          {[
-            ['Всего предложений', data.length],
-            ['У руководителя', data.filter((s) => s.status === 'Submitted').length],
-            ['На комиссии', data.filter((s) => s.status === 'InCommission').length],
-            ['Внедрено', data.filter((s) => s.status === 'Implemented').length],
-          ].map(([label, count]) => (
-            <div className="stat" key={label}>
-              <span>{label}</span>
-              <strong>{count}</strong>
-            </div>
-          ))}
+      <section className="section" id="notifications">
+        <div className="section-head">
+          <div>
+            <h2>Уведомления</h2>
+            <p>Обратная связь по вашим предложениям.</p>
+          </div>
         </div>
-      )}
+        <Unavailable>
+          Уведомления пока недоступны. Изменения статуса можно посмотреть на доске предложений.
+        </Unavailable>
+      </section>
       <section className="section">
         <div className="section-head">
           <div>
-            <h2>С чего начнём?</h2>
-            <p>Выберите шаблон — он поможет сформулировать идею.</p>
+            <h2>Картотека шаблонов и узких мест</h2>
+            <p>Выберите направление — форма предложения уже будет подготовлена.</p>
           </div>
-          <Link to="/templates" className="text-link">
-            Все шаблоны →
-          </Link>
+          <span className="aside">БЫСТРЫЙ СТАРТ ↗</span>
+        </div>
+        <div className="template-grid">
+          {directions.map(([title, icon, description]) => (
+            <button
+              className="template"
+              key={title}
+              onClick={() => setForm({ initialObject: title })}
+            >
+              <span className="arrow">↗</span>
+              <span className="emoji" aria-hidden="true">
+                {icon}
+              </span>
+              <b>{title}</b>
+              <span>{description}</span>
+            </button>
+          ))}
         </div>
         {templates.isPending ? (
           <Loading />
@@ -77,65 +80,61 @@ export function Dashboard() {
           <>
             <ErrorMessage error={templates.error} />
             <button className="btn btn-line" onClick={() => void templates.refetch()}>
-              Повторить
+              Повторить загрузку шаблонов
             </button>
           </>
-        ) : !templates.data?.length ? (
-          <Empty title="Шаблоны пока не добавлены">
-            <p>Вы можете предложить идею с чистого листа.</p>
-          </Empty>
         ) : (
-          <div className="template-grid">
-            {templates.data.slice(0, 3).map((t) => (
-              <button key={t.id} className="template" onClick={() => setForm({ template: t })}>
-                <span className="emoji" aria-hidden="true">
-                  {t.type === 'Bottleneck' ? '◷' : '✦'}
-                </span>
-                <b>{t.title}</b>
-                <span>{t.improvementObject}</span>
-                <span className="arrow">↗</span>
-              </button>
-            ))}
-          </div>
+          !!templates.data?.length && (
+            <>
+              <div className="section-head template-subheading">
+                <div>
+                  <h3>Шаблоны предприятия</h3>
+                  <p>Подсказки для конкретных процессов и рабочих мест.</p>
+                </div>
+                <Link className="text-link" to="/templates">
+                  Все шаблоны →
+                </Link>
+              </div>
+              <div className="template-grid">
+                {templates.data.map((t) => (
+                  <button className="template" key={t.id} onClick={() => setForm({ template: t })}>
+                    <span className="emoji" aria-hidden="true">
+                      {t.type === 'Bottleneck' ? '◷' : '✦'}
+                    </span>
+                    <b>{t.title}</b>
+                    <span>{t.improvementObject}</span>
+                    <span className="arrow">↗</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )
         )}
       </section>
-      <section className="section">
+      <section className="section" id="board">
+        <SuggestionsPage embedded />
+      </section>
+      <section className="section" id="my-suggestions">
         <div className="section-head">
           <div>
-            <h2>Последние предложения</h2>
-            <p>Новые шаги к большим изменениям.</p>
+            <h2>Мои предложения</h2>
+            <p>Ваши идеи и обратная связь по ним.</p>
           </div>
-          <Link to="/suggestions" className="text-link">
-            Все предложения →
-          </Link>
         </div>
-        {!suggestions.isPending &&
-          !suggestions.error &&
-          (recent.length ? (
-            <div className="board">
-              {recent.map((s) => (
-                <article key={s.id} className="idea">
-                  <div className="idea-top">
-                    <span className="idea-num">#{s.id.slice(0, 8)}</span>
-                    <Status status={s.status} />
-                  </div>
-                  <h3>{s.title}</h3>
-                  <div className="idea-footer">
-                    <span className="idea-author">{formatDate(s.created)}</span>
-                    <Link className="text-link" to="/suggestions">
-                      К предложениям →
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <Empty title="Первая идея может быть вашей">
-              <p>Поделитесь тем, что поможет вашему предприятию.</p>
-            </Empty>
-          ))}
+        <Empty title="Личный список пока недоступен">
+          <p>
+            Сейчас нельзя достоверно отделить ваши предложения от остальных. Отправленная идея
+            появится на общей доске.
+          </p>
+        </Empty>
       </section>
-      {form && <SuggestionForm template={form.template} onClose={() => setForm(undefined)} />}
+      {form && (
+        <SuggestionForm
+          template={form.template}
+          initialObject={form.initialObject}
+          onClose={() => setForm(undefined)}
+        />
+      )}
     </>
   )
 }

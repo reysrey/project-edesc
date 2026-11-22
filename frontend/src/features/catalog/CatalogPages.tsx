@@ -9,19 +9,23 @@ import type {
   Template,
   TemplateInput,
 } from '../../shared/api/contracts'
-import { isManager } from '../auth/session'
+import { isLeader } from '../auth/roles'
 import { Empty, ErrorMessage, Loading, PageHead } from '../../shared/ui/Feedback'
 import { Modal } from '../../shared/ui/Modal'
 import { SuggestionForm } from '../suggestions/SuggestionForm'
 
 export function DepartmentsPage() {
-  const manager = isManager(useOutletContext<Profile>())
+  const manager = isLeader(useOutletContext<Profile>())
   const query = useQuery({
     queryKey: ['departments'],
     queryFn: ({ signal }) => api.departments(signal),
   })
   const [edit, setEdit] = useState<{ department?: Department }>()
   const [remove, setRemove] = useState<Department>()
+  const [search, setSearch] = useState('')
+  const visible = query.data?.filter((d) =>
+    d.name.toLocaleLowerCase('ru').includes(search.trim().toLocaleLowerCase('ru')),
+  )
   return (
     <>
       <PageHead title="Подразделения" subtitle="Команды, которые делают предприятие лучше.">
@@ -31,28 +35,37 @@ export function DepartmentsPage() {
           </button>
         )}
       </PageHead>
-      <button
-        className="btn btn-line refresh-button"
-        disabled={query.isFetching}
-        onClick={() => void query.refetch()}
-      >
-        Обновить
-      </button>
+      <div className="toolbar">
+        <input
+          type="search"
+          aria-label="Поиск подразделений"
+          placeholder="Найти подразделение…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button
+          className="btn btn-line refresh-button"
+          disabled={query.isFetching}
+          onClick={() => void query.refetch()}
+        >
+          Обновить
+        </button>
+      </div>
       {query.isPending ? (
         <Loading />
       ) : query.error ? (
         <ErrorMessage error={query.error} />
-      ) : !query.data?.length ? (
-        <Empty title="Подразделений пока нет">
+      ) : !visible?.length ? (
+        <Empty title={search ? 'Подразделения не найдены' : 'Подразделений пока нет'}>
           <p>
             {manager
               ? 'Добавьте подразделение для подачи идей.'
-              : 'Администратор скоро добавит подразделения.'}
+              : 'Руководитель скоро добавит подразделения.'}
           </p>
         </Empty>
       ) : (
         <div className="catalog-grid">
-          {query.data.map((d) => (
+          {visible.map((d) => (
             <article className="panel" key={d.id}>
               <div className="catalog-icon" aria-hidden="true">
                 ▦
@@ -137,6 +150,18 @@ function DepartmentForm({ department, onClose }: { department?: Department; onCl
               onChange={(e) => setForm({ ...form, employeesCount: Number(e.target.value) })}
             />
           </div>
+          <div className="field">
+            <label htmlFor="department-head">Модератор подразделения</label>
+            <input
+              id="department-head"
+              value={form.headUserId ?? 'Назначение пока недоступно'}
+              readOnly
+              disabled
+            />
+            <small className="file-hint">
+              Выбор сотрудника станет доступен после подключения списка пользователей.
+            </small>
+          </div>
           <ErrorMessage error={mutation.error} />
           <div className="form-actions">
             <button type="button" className="btn btn-light" onClick={onClose}>
@@ -153,7 +178,7 @@ function DepartmentForm({ department, onClose }: { department?: Department; onCl
 }
 
 export function TemplatesPage() {
-  const manager = isManager(useOutletContext<Profile>())
+  const manager = isLeader(useOutletContext<Profile>())
   const query = useQuery({
     queryKey: ['templates'],
     queryFn: ({ signal }) => api.templates(signal),
@@ -161,6 +186,15 @@ export function TemplatesPage() {
   const [edit, setEdit] = useState<{ template?: Template }>()
   const [archive, setArchive] = useState<Template>()
   const [idea, setIdea] = useState<Template>()
+  const [search, setSearch] = useState('')
+  const [type, setType] = useState('')
+  const visible = query.data?.filter(
+    (t) =>
+      (!type || t.type === type) &&
+      `${t.title} ${t.improvementObject}`
+        .toLocaleLowerCase('ru')
+        .includes(search.trim().toLocaleLowerCase('ru')),
+  )
   return (
     <>
       <PageHead
@@ -173,24 +207,38 @@ export function TemplatesPage() {
           </button>
         )}
       </PageHead>
-      <button
-        className="btn btn-line refresh-button"
-        disabled={query.isFetching}
-        onClick={() => void query.refetch()}
-      >
-        Обновить
-      </button>
+      <div className="toolbar">
+        <input
+          type="search"
+          aria-label="Поиск шаблонов"
+          placeholder="Найти шаблон или узкое место…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select aria-label="Тип шаблона" value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="">Все типы</option>
+          <option value="Template">Шаблоны</option>
+          <option value="Bottleneck">Узкие места</option>
+        </select>
+        <button
+          className="btn btn-line refresh-button"
+          disabled={query.isFetching}
+          onClick={() => void query.refetch()}
+        >
+          Обновить
+        </button>
+      </div>
       {query.isPending ? (
         <Loading />
       ) : query.error ? (
         <ErrorMessage error={query.error} />
-      ) : !query.data?.length ? (
-        <Empty title="Шаблоны пока не добавлены">
+      ) : !visible?.length ? (
+        <Empty title={search || type ? 'Шаблоны не найдены' : 'Шаблоны пока не добавлены'}>
           <p>Предложение можно создать без шаблона на странице обзора.</p>
         </Empty>
       ) : (
         <div className="catalog-grid">
-          {query.data.map((t) => (
+          {visible.map((t) => (
             <article className="panel" key={t.id}>
               <div className="catalog-icon" aria-hidden="true">
                 {t.type === 'Bottleneck' ? '◷' : '✦'}

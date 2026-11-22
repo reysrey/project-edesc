@@ -1,12 +1,19 @@
 import { test, expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 
 const departmentId = '11111111-1111-4111-8111-111111111111'
 const suggestionId = '22222222-2222-4222-8222-222222222222'
 const templateId = '33333333-3333-4333-8333-333333333333'
 async function server(
   page: Page,
-  options: { signedIn?: boolean; manager?: boolean; failSubmit?: boolean; empty?: boolean } = {},
+  options: {
+    signedIn?: boolean
+    manager?: boolean
+    moderator?: boolean
+    failSubmit?: boolean
+    empty?: boolean
+  } = {},
 ) {
   let signedIn = options.signedIn ?? true
   const calls: { method: string; path: string; body: unknown }[] = []
@@ -39,7 +46,7 @@ async function server(
               fullName: 'Анна Иванова',
               position: 'Инженер',
               departmentId,
-              roles: options.manager ? ['AdminL1'] : [],
+              roles: options.manager ? ['AdminL1'] : options.moderator ? ['AdminL2'] : [],
             })
           : send({}, 401)
       if (path === '/api/Users/login') {
@@ -117,7 +124,7 @@ test('cookie login handles invalid credentials and logout', async ({ page }) => 
   await expect(page.getByRole('alert')).toContainText('Неверная почта или пароль')
   await page.getByLabel('Пароль', { exact: true }).fill('Correct123!')
   await page.getByRole('button', { name: 'Войти в IdeaHub' }).click()
-  await expect(page.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Добрый день/ })).toBeVisible()
   await page.getByRole('button', { name: /^Выйти/ }).click()
   await expect(page).toHaveURL(/login/)
   expect(calls.filter((c) => c.path === '/api/Users/logout')).toHaveLength(1)
@@ -151,6 +158,9 @@ test('retrying submit uses the saved draft instead of creating a duplicate', asy
   await dialog.getByLabel('Как предлагаете').fill('Создать чек-лист')
   await dialog.getByRole('button', { name: 'Отправить предложение' }).click()
   await expect(dialog.getByRole('alert')).toContainText('Временная ошибка отправки')
+  await dialog.getByRole('button', { name: 'Закрыть', exact: true }).last().click()
+  await page.getByRole('button', { name: 'Предложить идею', exact: false }).click()
+  await expect(dialog.getByLabel('Название идеи')).toBeDisabled()
   await dialog.getByRole('button', { name: 'Повторить отправку' }).click()
   await expect(dialog).not.toBeVisible()
   expect(calls.filter((c) => c.path === '/api/Suggestions/' && c.method === 'POST')).toHaveLength(1)
@@ -190,7 +200,7 @@ test('employee has no management actions or analytics access', async ({ page }) 
   await expect(page).toHaveURL(/\/$/)
   await page.goto('/suggestions')
   await page.getByRole('button', { name: 'Открыть:' }).click()
-  await expect(page.getByLabel('Решение руководителя')).toHaveCount(0)
+  await expect(page.getByLabel('Решение по предложению')).toHaveCount(0)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).not.toBeVisible()
 })
@@ -247,7 +257,22 @@ test('theme persists and pages fit the viewport', async ({ page }, testInfo) => 
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await page.getByRole('button', { name: 'Включить светлую тему' }).click()
-  for (const path of ['/', '/suggestions', '/templates', '/departments', '/analytics']) {
+  for (const path of [
+    '/',
+    '/suggestions',
+    '/incoming',
+    '/review',
+    '/rework',
+    '/processed',
+    '/templates',
+    '/departments',
+    '/effectiveness',
+    '/export',
+    '/users',
+    '/form',
+    '/company',
+    '/settings',
+  ]) {
     await page.goto(path)
     await expect(page.locator('.loading-state')).toHaveCount(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
@@ -256,4 +281,103 @@ test('theme persists and pages fit the viewport', async ({ page }, testInfo) => 
       fullPage: true,
     })
   }
+})
+
+test('moderator has four queues and cannot access leader settings', async ({ page }, testInfo) => {
+  const calls = await server(page, { moderator: true })
+  await page.goto('/')
+  await expect(page).toHaveURL(/incoming/)
+  await expect(page.getByLabel('Модератор', { exact: true })).toBeVisible()
+  await expect(page.locator('.sidebar .nav-btn')).toHaveCount(4)
+  await page.getByRole('link', { name: /На доработке/ }).click()
+  await expect(
+    page.getByRole('heading', { name: 'В этом разделе пока нет предложений' }),
+  ).toBeVisible()
+  await page.goto('/settings')
+  await expect(page).toHaveURL(/incoming/)
+  expect(calls.some((c) => c.path.includes('Settings'))).toBe(false)
+  await page.screenshot({ path: testInfo.outputPath('moderator.png'), fullPage: true })
+})
+
+test('employee layout follows the template and has one support action per card', async ({
+  page,
+}, testInfo) => {
+  const calls = await server(page)
+  await page.goto('/')
+  await expect(page.locator('.sidebar')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Мои предложения' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '♡ Поддержать', exact: true })).toHaveCount(1)
+  await expect(page.getByRole('button', { name: '♡ Поддержать', exact: true })).toBeDisabled()
+  await expect(
+    page.getByRole('button', {
+      name: /Оригинально|Просто и эффективно|Легко внедрить|Нравится результат/,
+    }),
+  ).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Безопасность' })).toBeVisible()
+  await page.getByRole('button', { name: 'Безопасность' }).click()
+  await expect(page.getByLabel('Объект улучшения')).toHaveValue('Безопасность')
+  await page.getByRole('button', { name: 'Закрыть', exact: true }).last().click()
+  expect(calls.some((c) => /support|vote/.test(c.path))).toBe(false)
+  await page.screenshot({ path: testInfo.outputPath('employee.png'), fullPage: true })
+})
+
+test('queue filters survive reload and all matching rows are exported with selected columns', async ({
+  page,
+}) => {
+  await server(page, { manager: true })
+  const data = Array.from({ length: 23 }, (_, i) => ({
+    id: `22222222-2222-4222-8222-${String(i).padStart(12, '0')}`,
+    title: `Идея ${i}`,
+    status: i === 22 ? 'Implemented' : 'Submitted',
+    created: '2026-11-18T12:00:00Z',
+  }))
+  await page.route('**/api/Suggestions/', (route) =>
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify(data) }),
+  )
+  await page.goto('/incoming?q=Идея&size=10&page=2')
+  await expect(page.locator('.suggestion-row')).toHaveCount(10)
+  await expect(page.locator('.pagination-summary')).toContainText('11–20 из 22')
+  await page.reload()
+  await expect(page.locator('.pagination-summary')).toContainText('11–20 из 22')
+  await page.getByRole('link', { name: 'Экспорт данных', exact: true }).click()
+  await page.getByLabel('ID', { exact: true }).uncheck()
+  await page.getByLabel('Дата', { exact: true }).uncheck()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Скачать CSV' }).click()
+  const download = await downloadPromise
+  const csv = await readFile((await download.path())!, 'utf8')
+  expect(csv.split('\r\n')).toHaveLength(23)
+  expect(csv).toContain('"Название";"Статус"')
+  expect(csv).not.toContain('Идея 22')
+  expect(csv).not.toContain('"ID"')
+})
+
+test('unfinished form text is restored in the same tab and never sent implicitly', async ({
+  page,
+}) => {
+  const calls = await server(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Предложить идею', exact: false }).click()
+  await page.getByLabel('Название идеи').fill('Незавершённая идея')
+  await page.getByRole('button', { name: 'Закрыть', exact: true }).last().click()
+  await page.reload()
+  await page.getByRole('button', { name: 'Предложить идею', exact: false }).click()
+  await expect(page.getByLabel('Название идеи')).toHaveValue('Незавершённая идея')
+  await expect(page.getByLabel('Ожидаемый эффект', { exact: true })).toBeDisabled()
+  expect(calls.some((c) => c.path === '/api/Suggestions/' && c.method === 'POST')).toBe(false)
+})
+
+test('leader-only previews do not send unsupported settings or user mutations', async ({
+  page,
+}) => {
+  const calls = await server(page, { manager: true })
+  await page.goto('/company')
+  await page.getByLabel('Название предприятия').fill('Предприятие для предпросмотра')
+  await expect(page.locator('.brand-preview')).toContainText('Предприятие для предпросмотра')
+  await expect(page.getByRole('button', { name: 'Сохранить оформление' })).toBeDisabled()
+  await page.goto('/settings')
+  await expect(page.getByRole('button', { name: 'Сохранить настройки' })).toBeDisabled()
+  await page.goto('/users')
+  await expect(page.getByRole('button', { name: 'Изменить роль' })).toBeDisabled()
+  expect(calls.filter((c) => c.method !== 'GET')).toHaveLength(0)
 })

@@ -453,3 +453,263 @@ html[data-theme='dark'] .success-message {
     display: none;
   }
 }
+/* Role-specific screens preserve the supplied IdeaHub layout and components. */
+.brand-home {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.company-label {
+  white-space: nowrap;
+}
+.sidebar .nav-count {
+  margin-left: auto;
+  min-width: 22px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.sidebar .side-foot {
+  padding-top: 28px;
+}
+.employee-main {
+  width: 100%;
+}
+.template-subheading {
+  margin-top: 24px;
+}
+.template-subheading h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.support-only {
+  display: flex;
+  width: auto;
+}
+.support-hint {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 7px;
+}
+.support-only .vote {
+  min-height: 36px;
+}
+.queue-stats {
+  margin-bottom: 22px;
+}
+.overview-panels {
+  align-items: start;
+  margin-top: 22px;
+}
+.overview-panels .my-item {
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.overview-panels .my-item > div {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.overview-panels .my-item b {
+  overflow-wrap: anywhere;
+}
+.overview-panels .status {
+  white-space: normal;
+}
+.panel h2 {
+  margin-top: 0;
+  font-size: 18px;
+}
+.panel > p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.stat small {
+  color: var(--muted);
+  font-size: 10px;
+  display: block;
+  margin-top: 7px;
+}
+.stat strong,
+.pagination-controls,
+.export-summary {
+  font-variant-numeric: tabular-nums;
+}
+.list-table-head button {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  font-size: inherit;
+  color: inherit;
+}
+.availability-note {
+  line-height: 1.7;
+  margin: 14px 0;
+}
+.unavailable-field {
+  flex-wrap: wrap;
+  color: var(--muted) !important;
+}
+.unavailable-field small {
+  font-size: 10px;
+  margin-left: 26px;
+  width: 100%;
+}
+.export-summary {
+  font-size: 12px;
+  margin: 16px 0;
+}
+.unsupported-form-fields {
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 7px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+}
+.checkbox-label input {
+  width: auto;
+  accent-color: var(--brand);
+}
+.settings-hint {
+  margin-top: 18px;
+}
+.company-banner {
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 22px;
+  background-position: center;
+  background-size: cover;
+}
+.company-banner .brand-preview-title {
+  margin: 0 0 12px;
+  font-size: 24px;
+}
+.company-banner p {
+  color: inherit;
+}
+.company-banner .btn {
+  background: var(--lime);
+  color: #214b35;
+}
+.brand-preview .brand {
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.brand-preview .brand > span {
+  min-width: 0;
+}
+.brand-preview .brandmark {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.brand-preview .brandmark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.logo-surface span {
+  color: var(--brand);
+}
+input[type='color'] {
+  height: 48px;
+  padding: 5px;
+}
+::selection {
+  background: #d9ef9b;
+  color: #202923;
+}
+input,
+textarea {
+  caret-color: var(--brand);
+}
+a {
+  text-underline-offset: 3px;
+}
+@media (max-width: 1000px) {
+  .overview-panels {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .topbar {
+    gap: 7px;
+  }
+  .topbar .brand {
+    font-size: 16px;
+    gap: 7px;
+  }
+  .topbar .brandmark {
+    width: 32px;
+    height: 32px;
+  }
+  .topbar .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+  .topbar-actions {
+    gap: 4px;
+  }
+  .user-chip {
+    gap: 4px;
+  }
+  .theme-toggle {
+    width: 32px;
+    height: 34px;
+    margin: 0;
+  }
+  .logout {
+    padding: 7px;
+    font-size: 10px;
+    height: 34px;
+  }
+  .toolbar select {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .sidebar .nav-count {
+    margin-left: 6px;
+  }
+  .queue-stats {
+    margin-top: 20px;
+  }
+  .support-only {
+    width: auto;
+  }
+  .company-banner {
+    padding: 16px;
+  }
+}
+.btn {
+  text-decoration: none;
+}
+@media (min-width: 1101px) {
+  .admin-layout {
+    grid-template-columns: 270px minmax(0, 1fr);
+  }
+}
+.file-label {
+  position: relative;
+}
+.file-label input[type='file'] {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.file-label:focus-within {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+}

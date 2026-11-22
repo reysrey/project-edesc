@@ -8,8 +8,8 @@ export function useSuggestions() {
 }
 export const statusConfig: Record<Suggestion['status'], { label: string; className: string }> = {
   Draft: { label: 'Черновик', className: '' },
-  Submitted: { label: 'У руководителя', className: 'st-new' },
-  ReturnedByManager: { label: 'Возвращено руководителем', className: 'st-rework' },
+  Submitted: { label: 'На проверке у модератора', className: 'st-new' },
+  ReturnedByManager: { label: 'Возвращено модератором', className: 'st-rework' },
   InCommission: { label: 'На комиссии', className: 'st-review' },
   RevisionRequired: { label: 'Требует доработки', className: 'st-rework' },
   Rejected: { label: 'Отклонено', className: 'st-no' },

@@ -41,6 +41,51 @@ export function SuggestionDetail({
         Подробное описание пока недоступно: сервер возвращает только заголовок, статус и дату
         предложения.
       </p>
+      <div className="detail">
+        <label>Проблема и предлагаемое решение</label>
+        <p>Текст предложения пока недоступен для просмотра.</p>
+      </div>
+      <div className="detail">
+        <label>История изменений</label>
+        <p>История и комментарии пока недоступны.</p>
+      </div>
+      {(suggestion.status === 'Draft' ||
+        suggestion.status === 'ReturnedByManager' ||
+        suggestion.status === 'RevisionRequired') && (
+        <p className="preview-form-note">
+          Редактирование и отправка сохранённого предложения пока недоступны.
+        </p>
+      )}
+      {manager && suggestion.status === 'InCommission' && (
+        <>
+          <p className="preview-form-note">Решения комиссии пока недоступны.</p>
+          <div className="decision">
+            <button className="btn btn-light" disabled>
+              ↻ На доработку
+            </button>
+            <button className="btn btn-primary" disabled>
+              ✓ Одобрить
+            </button>
+            <button className="btn btn-danger" disabled>
+              Отклонить
+            </button>
+          </div>
+        </>
+      )}
+      {manager && ['ApprovedPlanning', 'InImplementation'].includes(suggestion.status) && (
+        <>
+          <p className="preview-form-note">Изменение этапа внедрения пока недоступно.</p>
+          <button className="btn btn-success" disabled>
+            Отметить внедрённой
+          </button>
+        </>
+      )}
+      {suggestion.status === 'Implemented' && (
+        <div className="detail">
+          <label>Фактический результат</label>
+          <p>Описание результата, затраты и экономия пока недоступны.</p>
+        </div>
+      )}
       {manager && suggestion.status === 'Submitted' && (
         <form
           onSubmit={(e) => {
@@ -50,7 +95,7 @@ export function SuggestionDetail({
         >
           <fieldset disabled={mutation.isPending}>
             <div className="field">
-              <label htmlFor="decision">Решение руководителя</label>
+              <label htmlFor="decision">Решение по предложению</label>
               <select
                 id="decision"
                 value={action}

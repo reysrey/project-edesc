@@ -17,13 +17,19 @@ export function Modal({
   useEffect(() => {
     const element = dialog.current!
     const previous = document.activeElement as HTMLElement | null
+    const scrollPosition = { top: window.scrollY, left: window.scrollX }
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     element.showModal()
     return () => {
       element.close()
       document.body.style.overflow = overflow
-      previous?.focus()
+      const target =
+        previous?.isConnected && previous !== document.body
+          ? previous
+          : document.getElementById('main')
+      target?.focus({ preventScroll: true })
+      window.scrollTo({ ...scrollPosition, behavior: 'instant' })
     }
   }, [])
   return (
