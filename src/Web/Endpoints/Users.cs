@@ -12,7 +12,25 @@ public class Users : IEndpointGroup
         groupBuilder.MapIdentityApi<ApplicationUser>();
 
         groupBuilder.MapPost(Logout, "logout").RequireAuthorization();
+        groupBuilder.MapGet(GetCurrentUser, "me").RequireAuthorization();
     }
+
+    public static async Task<Results<Ok<CurrentUserResponse>, UnauthorizedHttpResult>> GetCurrentUser(
+        System.Security.Claims.ClaimsPrincipal principal,
+        UserManager<ApplicationUser> userManager)
+    {
+        var user = await userManager.GetUserAsync(principal);
+        if (user is null) return TypedResults.Unauthorized();
+
+        var roles = await userManager.GetRolesAsync(user);
+        return TypedResults.Ok(new CurrentUserResponse(
+            user.Id, user.Email ?? string.Empty, user.FullName, user.Position,
+            user.DepartmentId, roles.ToArray()));
+    }
+
+    public sealed record CurrentUserResponse(
+        string Id, string Email, string FullName, string Position,
+        Guid? DepartmentId, string[] Roles);
 
     [EndpointSummary("Log out")]
     [EndpointDescription("Logs out the current user by clearing the authentication cookie.")]
