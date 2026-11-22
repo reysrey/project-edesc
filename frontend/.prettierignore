@@ -1,0 +1,8 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+package-lock.json
+# Preserve the CSS extracted directly from the design source.
+src/app/design.css
+nginx.example.conf
