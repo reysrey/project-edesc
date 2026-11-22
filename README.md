@@ -1,44 +1,51 @@
-# KaizenBoard
+# IdeaHub / KaizenBoard
 
-Backend-сервис для подачи и обработки предложений по улучшению (ППУ).
-Построен на .NET 10 (ASP.NET Core Minimal API) и PostgreSQL с использованием паттернов Clean Architecture и CQRS.
+Внутреннее приложение для предложений по улучшению предприятия. Backend: .NET 10, ASP.NET Core Minimal API, PostgreSQL, Clean Architecture/CQRS. Frontend: React, TypeScript, Vite.
 
-## Что нужно установить
+## Локальный запуск
 
-Чтобы запустить проект локально, вам понадобятся:
+Нужны .NET SDK **10.0.402** (см. global.json), Docker Desktop и Node.js 24 LTS.
 
-1. **Docker Desktop** — для запуска базы данных в изолированном контейнере (не требует установки PostgreSQL на компьютер).
-   * Скачать: https://www.docker.com/products/docker-desktop/
-2. **.NET 10 SDK** — для сборки и запуска C#-кода.
-   * Скачать: https://dotnet.microsoft.com/download/dotnet/10.0
-3. **Среда разработки (IDE)** — на выбор:
-   * Visual Studio 2022 (Рекомендуется): https://visualstudio.microsoft.com/
-   * Visual Studio Code: https://code.visualstudio.com/ (потребуется расширение C# Dev Kit)
+Из корня репозитория запустите базу:
 
+```powershell
+docker compose up -d
+```
 
-## Как запустить проект (Getting Started)
+В отдельном терминале запустите API:
 
-### 1. Запуск базы данных
-Откройте терминал в корневой папке решения (где лежит файл `docker-compose.yml`) и выполните команду:
-```bash
-docker compose up -d  
-## Либо в vs тоже самое в терминале, это позволит работать с бд по идее у каждого она своя пока что будет
+```powershell
+dotnet run --project src/Web --launch-profile http
+```
 
-Запуск сервера (API)
-Если вы используете Visual Studio: откройте файл KaizenBoard.slnx и нажмите F5 (или зеленую кнопку «Пуск»).
+API: http://localhost:5000, документация: http://localhost:5000/scalar. При старте сервер применяет миграции и seed. Seed-администратор предназначен только для локальной разработки; параметры смотрите в ApplicationDbContextInitialiser.cs.
 
-Если вы используете VS Code / консоль: выполните команду:
+В другом терминале запустите фронтенд:
 
-bash
-dotnet run --project src/Web
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
 
-Структура решения
-src/Domain — Бизнес-сущности, правила и Enum'ы (Suggestion, Department, Template).
+Приложение: http://127.0.0.1:5173. Запросы `/api` проксируются на `http://localhost:5000`. Браузер должен открывать фронтенд, а не API. Изменить адрес API можно через `frontend/.env` по примеру `.env.example`.
 
-src/Application — Бизнес-логика, сценарии (CQRS/MediatR Commands и Queries).
+## Структура
 
-src/Infrastructure — Работа с базой данных (EF Core), миграции, настройки Identity.
+- `frontend/src/app` — приложение, маршруты, layout, тема, стили макета.
+- `frontend/src/features` — сценарии авторизации, предложений, справочников, аналитики.
+- `frontend/src/shared` — типизированный API, runtime-проверка контрактов, общие компоненты и форматирование.
+- `src/Domain` — бизнес-сущности и статусы.
+- `src/Application` — команды и запросы.
+- `src/Infrastructure` — EF Core, PostgreSQL и Identity.
+- `src/Web` — HTTP API.
+- `tests` — тесты бэкенда; `frontend/e2e` — браузерные тесты фронта.
+- `docs/design/ideahub.html` — исходный HTML-макет.
 
-src/Web — Слой API (эндпоинты, обработка запросов).
+Подробности архитектуры, развёртывания и проверок — в [frontend/README.md](frontend/README.md).
 
-tests/ — Модульные и интеграционные тесты.
+## Границы текущей интеграции
+
+Фронт работает с имеющимися endpoint-ами и добавленным GET `/api/Users/me`. Он не содержит демо-входа или фальшивых записей. Полный сценарий макета требует развития API: подробной карточки, прав владельца, редактирования, комиссии, фото, голосов и уведомлений. Конкретный список для команды — [docs/BACKEND_HANDOFF.md](docs/BACKEND_HANDOFF.md).
+
+Для проверки фронта без запущенного API доступны браузерные тесты с явно заданными ответами. Они не заменяют проверку с реальной БД и сервером.
