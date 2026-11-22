@@ -7,14 +7,16 @@ import { Empty, ErrorMessage, Loading } from '../../shared/ui/Feedback'
 import { Unavailable } from '../../shared/ui/Unavailable'
 import { SuggestionForm } from './SuggestionForm'
 import { SuggestionsPage } from './SuggestionsPage'
+import { Icon } from '../../shared/ui/Icon'
+import { templateIcon } from '../catalog/templateIcon'
 
 const directions = [
-  ['Модернизация', '⚙', 'Оборудование, инструменты и новые способы работы'],
-  ['Сокращение времени', '◷', 'Устранение лишних действий и ожидания'],
-  ['Безопасность', '✳', 'Рабочая среда, риски и профилактика'],
-  ['Качество', '◇', 'Стабильность результата и снижение брака'],
-  ['Экономия ресурсов', '↘', 'Материалы, энергия и рациональное использование'],
-  ['Другое', '＋', 'Любые идеи, которые делают работу лучше'],
+  ['Модернизация', 'settings', 'Оборудование, инструменты и новые способы работы'],
+  ['Сокращение времени', 'clock', 'Устранение лишних действий и ожидания'],
+  ['Безопасность', 'shield', 'Рабочая среда, риски и профилактика'],
+  ['Качество', 'diamond', 'Стабильность результата и снижение брака'],
+  ['Экономия ресурсов', 'leaf', 'Материалы, энергия и рациональное использование'],
+  ['Другое', 'plus', 'Любые идеи, которые делают работу лучше'],
 ] as const
 export function Dashboard() {
   const profile = useOutletContext<Profile>()
@@ -67,7 +69,7 @@ export function Dashboard() {
             >
               <span className="arrow">↗</span>
               <span className="emoji" aria-hidden="true">
-                {icon}
+                <Icon name={icon} />
               </span>
               <b>{title}</b>
               <span>{description}</span>
@@ -99,7 +101,7 @@ export function Dashboard() {
                 {templates.data.map((t) => (
                   <button className="template" key={t.id} onClick={() => setForm({ template: t })}>
                     <span className="emoji" aria-hidden="true">
-                      {t.type === 'Bottleneck' ? '◷' : '✦'}
+                      <Icon name={templateIcon(t)} />
                     </span>
                     <b>{t.title}</b>
                     <span>{t.improvementObject}</span>

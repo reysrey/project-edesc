@@ -306,8 +306,8 @@ test('employee layout follows the template and has one support action per card',
   await page.goto('/')
   await expect(page.locator('.sidebar')).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Мои предложения' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '♡ Поддержать', exact: true })).toHaveCount(1)
-  await expect(page.getByRole('button', { name: '♡ Поддержать', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Поддержать', exact: true })).toHaveCount(1)
+  await expect(page.getByRole('button', { name: 'Поддержать', exact: true })).toBeDisabled()
   await expect(
     page.getByRole('button', {
       name: /Оригинально|Просто и эффективно|Легко внедрить|Нравится результат/,

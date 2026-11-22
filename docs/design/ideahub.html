@@ -143,8 +143,254 @@ html[data-theme="dark"] .login-box{background:var(--paper);border-color:var(--li
   }
 }
 .vote-row{display:flex;justify-content:flex-end}.vote-row .vote{min-width:120px}
+/* ideahub-accessibility:start */
+/* Shared by the application and the standalone HTML reference. */
+:root {
+  --muted: #526259;
+  --accent-text: #245a40;
+  --accent-surface: #e8f2eb;
+  --accent-surface-text: #245a40;
+  --on-brand: #ffffff;
+  --brand-hover: #2c6248;
+  --on-brand-hover: #ffffff;
+}
+html[data-theme='dark'] {
+  --muted: #afbeb3;
+  --accent-text: #b7dec5;
+  --accent-surface: #22382b;
+  --accent-surface-text: #b7dec5;
+}
+.ui-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
+}
+html[data-theme] .template .emoji,
+html[data-theme] .catalog-icon {
+  background: var(--accent-surface);
+  color: var(--accent-surface-text);
+}
+.template .emoji .ui-icon,
+.catalog-icon .ui-icon {
+  width: 23px;
+  height: 23px;
+}
+html[data-theme] .status::before {
+  content: none !important;
+  display: none !important;
+}
+.status {
+  gap: 5px;
+}
+.status .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+.vote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.vote .ui-icon {
+  width: 15px;
+  height: 15px;
+}
+html[data-theme] .idea p,
+html[data-theme] .idea-author,
+html[data-theme] .idea-num,
+html[data-theme] .empty,
+html[data-theme] .empty p,
+html[data-theme] .stat span,
+html[data-theme] .stat small,
+html[data-theme] .company-label,
+html[data-theme] .brand-light,
+html[data-theme] .section-head .aside,
+html[data-theme] .eyebrow,
+html[data-theme] .side-label,
+html[data-theme] .side-foot,
+html[data-theme] .art-note,
+html[data-theme] .login-foot,
+html[data-theme] .file-hint,
+html[data-theme] .counter,
+html[data-theme] .template span:not(.emoji),
+html[data-theme] .my-item small {
+  color: var(--muted);
+}
+html[data-theme] .nav-btn {
+  color: var(--muted);
+}
+html[data-theme] .nav-btn.active,
+html[data-theme] .nav-btn:hover,
+html[data-theme] .nav-count,
+html[data-theme] .avatar,
+html[data-theme] .preview-form-note {
+  background: var(--accent-surface);
+  color: var(--accent-surface-text);
+}
+html[data-theme] .link-button,
+html[data-theme] .text-link,
+html[data-theme] .login-switch,
+html[data-theme] .password-toggle,
+html[data-theme] .forgot-link,
+html[data-theme] .empty-icon,
+html[data-theme] .demo-details summary {
+  color: var(--accent-text);
+}
+html[data-theme] .pagination-summary b {
+  color: var(--accent-text);
+}
+html[data-theme] input::placeholder,
+html[data-theme] textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+html[data-theme] .btn-primary {
+  background: var(--brand);
+  color: var(--on-brand);
+  transition-property: transform, box-shadow;
+}
+html[data-theme] .btn-primary:hover:not(:disabled) {
+  background: var(--brand-hover);
+  color: var(--on-brand-hover);
+}
+html[data-theme] .topbar .brandmark,
+html[data-theme] .login-art .brandmark {
+  color: var(--on-brand);
+}
+html[data-theme] .welcome .btn-primary,
+html[data-theme] .company-banner .btn-primary {
+  background: var(--lime);
+  color: #214b35;
+}
+html[data-theme] .welcome .eyebrow,
+html[data-theme] .welcome p {
+  color: #e2eee6;
+}
+html[data-theme] .status {
+  background: #edf2ed;
+  color: #526259;
+}
+html[data-theme] .status.st-new {
+  background: #eaf1ff;
+  color: #28568d;
+}
+html[data-theme] .status.st-review {
+  background: #fff2d9;
+  color: #77521a;
+}
+html[data-theme] .status.st-rework {
+  background: #f1eaff;
+  color: #604389;
+}
+html[data-theme] .status.st-ok {
+  background: #e5f3e9;
+  color: #235d3e;
+}
+html[data-theme] .status.st-done {
+  background: #e9e5f8;
+  color: #58408f;
+}
+html[data-theme] .status.st-no {
+  background: #fae9e6;
+  color: #8d4037;
+}
+html[data-theme='dark'] .status {
+  background: #29372e;
+  color: #d4dfd7;
+}
+html[data-theme='dark'] .status.st-new {
+  background: #243653;
+  color: #a8c4f4;
+}
+html[data-theme='dark'] .status.st-review {
+  background: #44381f;
+  color: #f0ce83;
+}
+html[data-theme='dark'] .status.st-rework {
+  background: #392c4d;
+  color: #cbb5ef;
+}
+html[data-theme='dark'] .status.st-ok {
+  background: #203c2b;
+  color: #a5d6b2;
+}
+html[data-theme='dark'] .status.st-done {
+  background: #332c4b;
+  color: #c5b8f0;
+}
+html[data-theme='dark'] .status.st-no {
+  background: #482d29;
+  color: #efb0a7;
+}
+html[data-theme] .idea-footer {
+  border-color: var(--line);
+}
+html[data-theme] .brand-preview {
+  background: #f4f7f3;
+  color: #202923;
+}
+html[data-theme] .brand-preview p {
+  color: #526259;
+}
+html[data-theme] .company-banner p {
+  color: inherit;
+}
+.company-banner-content {
+  padding: 16px;
+  border-radius: 10px;
+}
+html[data-theme] .logo-surface.light > span {
+  color: #245a40;
+}
+html[data-theme] .logo-surface.dark > span {
+  color: #b7dec5;
+}
+html[data-theme] .dark-preview {
+  background: #17231c;
+  color: #edf4ee;
+}
+html[data-theme] .dark-preview p {
+  color: #d2dfd6;
+}
+html[data-theme] .dark-preview .brand-light {
+  color: #afbeb3;
+}
+/* The original standalone header uses inline colors instead of classes. */
+html[data-theme] #companyLabel,
+html[data-theme] .brand > span[style] {
+  color: var(--muted) !important;
+}
+
+/* ideahub-accessibility:end */
 </style></head>
 <body>
+<!-- ideahub-icons:start -->
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute;overflow:hidden">
+  <symbol id="ih-settings" viewBox="0 0 24 24"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="ih-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="ih-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v5c0 5-4 8-8 10-4-2-8-5-8-10V6Z"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="ih-diamond" viewBox="0 0 24 24"><path d="m3 8 4-5h10l4 5-9 13Zm0 0h18M7 3l5 18 5-18"/></symbol>
+  <symbol id="ih-leaf" viewBox="0 0 24 24"><path d="M20 3C9 3 3 7 4 14c1 7 12 7 15-2 1-3 1-6 1-9ZM3 21 15 9"/></symbol>
+  <symbol id="ih-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="ih-file" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8Zm0 0v5h5M8 12h8M8 16h6"/></symbol>
+  <symbol id="ih-hourglass" viewBox="0 0 24 24"><path d="M5 3h14M5 21h14M7 3v4l5 5-5 5v4M17 3v4l-5 5 5 5v4"/></symbol>
+  <symbol id="ih-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="ih-rotate" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></symbol>
+  <symbol id="ih-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="ih-star" viewBox="0 0 24 24"><path d="m12 3 3 6 6 1-4 5 1 6-6-3-6 3 1-6-4-5 6-1Z"/></symbol>
+  <symbol id="ih-x" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  <symbol id="ih-heart" viewBox="0 0 24 24"><path d="M20 5c-3-3-6-1-8 1C10 4 7 2 4 5c-5 5 3 11 8 16 5-5 13-11 8-16Z"/></symbol>
+</svg>
+
+<!-- ideahub-icons:end -->
 <div id="loginScreen" class="login">
  <section class="login-art"><div class="brand"><div class="brandmark">✳</div> idea<span style="font-weight:500;color:#819087">hub</span></div><div class="art-copy"><div class="script">Большие перемены начинаются с идеи</div><h1>Замечай.<br>Предлагай.<br><span style="color:#39775b">Улучшай.</span></h1><p>Единое пространство, где идеи сотрудников превращаются в реальные изменения и измеримый результат.</p></div><div class="art-note">IDEAHUB · CULTURE OF IMPROVEMENT</div></section>
  <section class="login-panel"><div class="login-box"><div class="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО</div><h2 id="authTitle">С возвращением</h2><p id="authDesc">Войдите, чтобы поделиться идеей или посмотреть, как меняется ваше предприятие.</p><form id="authForm" onsubmit="login(event)"><div class="field"><label for="authEmail">Рабочая почта</label><input id="authEmail" type="email" autocomplete="email" placeholder="name@company.ru" required></div><div class="field"><label for="authPass">Пароль</label><input id="authPass" type="password" autocomplete="current-password" placeholder="Введите пароль" required></div><div id="registerFields" class="hidden"><div class="field"><label for="regName">ФИО</label><input id="regName" placeholder="Иванов Иван Иванович"></div><div class="field"><label for="regJob">Должность</label><input id="regJob" placeholder="Ваша должность"></div></div><button class="btn btn-primary btn-wide" id="authSubmit">Войти в IdeaHub →</button></form><div class="login-foot"><span id="authToggleText">Впервые здесь?</span> <button class="login-switch" onclick="toggleAuth()" id="authToggle">Создать аккаунт</button><details class="demo-details"><summary>Демо-доступ · только для проверки</summary><div class="demo-access"><button onclick="demoLogin('employee')">Войти как сотрудник</button><button onclick="demoLogin('admin')">Войти как модератор</button><button onclick="demoLogin('chief')">Войти как руководитель</button></div><small>Быстрый вход для проверки ролей. В рабочей версии этот блок отключается.</small></details></div></div></section>
@@ -154,6 +400,19 @@ html[data-theme="dark"] .login-box{background:var(--paper);border-color:var(--li
 <div class="modal-bg" id="detailModal" role="dialog" aria-modal="true" aria-label="Карточка предложения" onclick="outsideClose(event,'detailModal')"><div class="modal" id="detailBody"></div></div><div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>'use strict';
 /* IdeaHub — single-source application layer */
+
+function uiIcon(name){return '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#ih-'+name+'"></use></svg>'}
+function statusIcon(status){return uiIcon(({new:'dot',review:'clock',rework:'rotate',approved:'check',done:'star',rejected:'x'})[statusMeta(status).key]||'file')}
+function brandRGB(hex){return hex.slice(1).match(/.{2}/g).map(x=>parseInt(x,16))}
+function brandLuminance(hex){const c=brandRGB(hex).map(x=>{const v=x/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return c[0]*.2126+c[1]*.7152+c[2]*.0722}
+function brandContrast(a,b){const x=brandLuminance(a),y=brandLuminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
+function onBrandColor(bg){return brandContrast('#000000',bg)>brandContrast('#ffffff',bg)?'#000000':'#ffffff'}
+function brandMix(a,b,amount){const from=brandRGB(a),to=brandRGB(b);return '#'+from.map((v,i)=>Math.round(v+(to[i]-v)*amount).toString(16).padStart(2,'0')).join('')}
+function brandReadable(color,bg){if(brandContrast(color,bg)>=4.5)return color;const end=onBrandColor(bg);for(let i=1;i<=40;i++){const result=brandMix(color,end,i/40);if(brandContrast(result,bg)>=4.5)return result}return end}
+function syncBrandColors(){const root=document.documentElement,color=/^#[0-9a-f]{6}$/i.test(brandColor)?brandColor:'#39775b',paper=root.dataset.theme==='dark'?'#18221c':'#ffffff',soft=brandMix(color,paper,.89),hover=brandMix(color,'#000000',.14);for(const [key,value] of Object.entries({'--brand':color,'--brand2':soft,'--accent-surface':soft,'--accent-text':brandReadable(color,paper),'--accent-surface-text':brandReadable(color,soft),'--on-brand':onBrandColor(color),'--brand-hover':hover,'--on-brand-hover':onBrandColor(hover)}))root.style.setProperty(key,value);document.querySelectorAll('.brandmark').forEach(el=>el.style.color=onBrandColor(color));document.querySelectorAll('.dark-preview b').forEach(el=>el.style.color=brandReadable(color,'#17231c'))}
+function applyBrand(){applyBrandBase();syncBrandColors()}
+function applyTheme(theme){applyThemeBase(theme);syncBrandColors()}
+
 const DEMO_PASSWORD='ideahub-demo';
 const STATUS_CONFIG={
  'Новая':{key:'new',label:'Новая',className:'st-new',icon:'✦',next:['На рассмотрении','Отклонена']},
@@ -202,8 +461,8 @@ function loadDemo(){try{const d=JSON.parse(localStorage.getItem('ideahub-demo-st
 loadDemo();ideas=ideas.map(normalizeIdea);
 function toast(message,actionLabel=null,action=null){toastQueue.push({message:String(message),actionLabel,action});if(!toastActive)showNextToast()}
 function showNextToast(){const t=$('toast');if(!t)return;const item=toastQueue.shift();if(!item){toastActive=false;t.classList.remove('show');t.innerHTML='';return}toastActive=true;t.innerHTML=`<span>${esc(item.message)}</span>${item.actionLabel?`<button class="toast-action" type="button">${esc(item.actionLabel)}</button>`:''}<button class="toast-close" type="button" aria-label="Закрыть уведомление">×</button>`;t.classList.add('show');const timer=setTimeout(()=>{t.classList.remove('show');setTimeout(showNextToast,220)},item.message.length>40?4500:3000);t.querySelector('.toast-close')?.addEventListener('click',()=>{clearTimeout(timer);t.classList.remove('show');setTimeout(showNextToast,120)});t.querySelector('.toast-action')?.addEventListener('click',()=>{clearTimeout(timer);item.action?.();t.classList.remove('show');setTimeout(showNextToast,120)})}
-function applyBrand(){const root=document.documentElement;root.style.setProperty('--brand',brandColor);root.style.setProperty('--brand2','#e8f2eb');if(window.CSS?.supports?.('color','color-mix(in srgb, red, white)'))root.style.setProperty('--brand2',`color-mix(in srgb, ${brandColor} 11%, white)`);if(window.CSS?.supports?.('color','color-mix(in srgb, red, black)'))root.style.setProperty('--brand-dark',`color-mix(in srgb, ${brandColor} 82%, black)`);root.style.setProperty('--font-ui',brandFont==='System'?'system-ui, sans-serif':`${brandFont}, sans-serif`);document.querySelector('meta[name="theme-color"]')?.setAttribute('content',brandColor);document.querySelectorAll('.brandmark').forEach(x=>x.style.background=brandColor);document.querySelectorAll('.welcome').forEach(w=>{w.style.backgroundImage=welcomePattern?`linear-gradient(120deg,#1f5a44dd,#3f7d5edd),url("${welcomePattern}")`:'';w.style.backgroundSize='cover';w.style.backgroundPosition='center'});if(brandLogo){document.querySelectorAll('.brandmark').forEach(x=>{x.innerHTML=`<img src="${esc(brandLogo)}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">`})}else document.querySelectorAll('.brandmark').forEach(x=>x.textContent='✳')}
-function applyTheme(theme){const t=theme||localStorage.getItem(`ideahub-theme-${currentUser?.id||'guest'}`)||localStorage.getItem('ideahub-theme-guest')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;const b=$('themeToggle');if(b){b.textContent=t==='dark'?'☀':'☾';b.title=t==='dark'?'Включить светлую тему':'Включить тёмную тему';b.setAttribute('aria-label',b.title)}}
+function applyBrandBase(){const root=document.documentElement;root.style.setProperty('--brand',brandColor);root.style.setProperty('--brand2','#e8f2eb');if(window.CSS?.supports?.('color','color-mix(in srgb, red, white)'))root.style.setProperty('--brand2',`color-mix(in srgb, ${brandColor} 11%, white)`);if(window.CSS?.supports?.('color','color-mix(in srgb, red, black)'))root.style.setProperty('--brand-dark',`color-mix(in srgb, ${brandColor} 82%, black)`);root.style.setProperty('--font-ui',brandFont==='System'?'system-ui, sans-serif':`${brandFont}, sans-serif`);document.querySelector('meta[name="theme-color"]')?.setAttribute('content',brandColor);document.querySelectorAll('.brandmark').forEach(x=>x.style.background=brandColor);document.querySelectorAll('.welcome').forEach(w=>{w.style.backgroundImage=welcomePattern?`linear-gradient(120deg,#1f5a44dd,#3f7d5edd),url("${welcomePattern}")`:'';w.style.backgroundSize='cover';w.style.backgroundPosition='center'});if(brandLogo){document.querySelectorAll('.brandmark').forEach(x=>{x.innerHTML=`<img src="${esc(brandLogo)}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">`})}else document.querySelectorAll('.brandmark').forEach(x=>x.textContent='✳')}
+function applyThemeBase(theme){const t=theme||localStorage.getItem(`ideahub-theme-${currentUser?.id||'guest'}`)||localStorage.getItem('ideahub-theme-guest')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;const b=$('themeToggle');if(b){b.textContent=t==='dark'?'☀':'☾';b.title=t==='dark'?'Включить светлую тему':'Включить тёмную тему';b.setAttribute('aria-label',b.title)}}
 function toggleTheme(){const next=document.documentElement.dataset.theme==='dark'?'light':'dark';localStorage.setItem(`ideahub-theme-${currentUser?.id||'guest'}`,next);applyTheme(next)}
 function currentTheme(){return document.documentElement.dataset.theme||'light'}
 function toggleAuth(){authMode=authMode==='login'?'register':'login';$('authTitle').textContent=authMode==='login'?'С возвращением':'Создать аккаунт';$('authDesc').textContent=authMode==='login'?'Войдите, чтобы поделиться идеей или посмотреть, как меняется ваше предприятие.':'Зарегистрируйтесь в пространстве улучшений вашей компании.';$('registerFields').classList.toggle('hidden',authMode!=='register');$('regPassConfirmWrap')?.classList.toggle('hidden',authMode!=='register');$('authSubmit').textContent=authMode==='login'?'Войти в IdeaHub →':'Создать аккаунт →';$('authToggleText').textContent=authMode==='login'?'Впервые здесь?':'Уже есть аккаунт?';$('authToggle').textContent=authMode==='login'?'Создать аккаунт':'Войти';$('authPass').autocomplete=authMode==='login'?'current-password':'new-password'}
@@ -216,8 +475,8 @@ function enter(role){current=role;adminPage=role==='admin'?'incoming':'overview'
 function logout(){if(currentUser)saveDraft();document.querySelectorAll('.modal-bg.show').forEach(m=>m.classList.remove('show'));if(authMode==='register')toggleAuth();currentUser=null;current='employee';$('appScreen').classList.add('hidden');$('loginScreen').classList.remove('hidden');$('authPass').value='';$('authEmail').value='';applyTheme(localStorage.getItem('ideahub-theme-guest'));applyBrand();}
 function myIdeas(){return ideas.filter(i=>i.authorId===currentUser?.id).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))}
 function unreadNotifications(){return myIdeas().flatMap(i=>(i.notifications||[]).filter(n=>!n.read).map(n=>({...n,ideaId:i.id,title:i.title}))).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))}
-function renderEmployee(){if(!currentUser)return;const own=myIdeas(),notices=unreadNotifications();let board=ideas.filter(i=>serviceSettings.publicBoard||i.authorId===currentUser.id).slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));board=board.filter(i=>(!employeeFilters.q||(i.title+' '+i.problem+' '+i.id+' '+i.author).toLowerCase().includes(employeeFilters.q.toLowerCase()))&&(!employeeFilters.category||i.category===employeeFilters.category)&&(!employeeFilters.status||i.status===employeeFilters.status));const boardDisabled=!serviceSettings.publicBoard;const templates=[['Модернизация','⚙️','Оборудование, инструменты и новые способы работы'],['Сокращение времени','◷','Устранение лишних действий и ожидания'],['Безопасность','✳','Рабочая среда, риски и профилактика'],['Качество','◇','Стабильность результата и снижение брака'],['Экономия ресурсов','↘','Материалы, энергия и рациональное использование'],['Другое','＋','Любые идеи, которые делают работу лучше']];$('employeeView').innerHTML=`<div class="welcome"><div><div class="eyebrow">ЛИЧНЫЙ КАБИНЕТ · ${esc((currentUser.job||'СОТРУДНИК').toUpperCase())}</div><h1>Добрый день, ${esc(currentUser.name.split(' ')[0])}!</h1><p>Ваши наблюдения могут сделать работу предприятия лучше.</p></div><button class="btn btn-primary" onclick="openIdeaForm()">＋ Предложить идею</button></div><section class="section"><div class="section-head"><div><h2>Уведомления</h2><p>Обратная связь по вашим предложениям.</p></div><span class="aside">${notices.length} НЕПРОЧИТАНО</span></div>${notices.length?`<div class="notice-stack" aria-live="polite">${notices.map(n=>`<div class="notice-item"><span><b>${esc(n.title)}</b><br>${esc(n.text)} <small>${formatDate(n.createdAt)}</small></span><button class="btn btn-light" onclick="markNoticeRead(${n.ideaId},'${esc(n.createdAt)}')">Понятно</button></div>`).join('')}</div>`:'<div class="empty">Новых уведомлений нет.</div>'}</section><section class="section"><div class="section-head"><div><h2>Картотека шаблонов и узких мест</h2><p>Выберите направление — форма предложения уже будет подготовлена.</p></div><span class="aside">БЫСТРЫЙ СТАРТ ↗</span></div><div class="template-grid">${templates.map(([a,b,c])=>`<button class="template" onclick="openTemplate('${a}')"><span class="arrow">↗</span><div class="emoji">${b}</div><b>${a}</b><span>${c}</span></button>`).join('')}</div></section><section class="section"><div class="section-head"><div><h2>Доска предложений</h2><p>${boardDisabled?'Публичная доска отключена руководителем.':'Знакомьтесь с идеями коллег и поддерживайте полезные инициативы.'}</p></div><span class="aside">${board.length} ПРЕДЛОЖЕНИЙ</span></div>${boardDisabled?'<div class="empty">Публичная доска отключена руководителем. Здесь отображаются только ваши предложения.</div>':`<div class="toolbar"><input id="boardSearch" placeholder="Найти идею или проблему..." value="${esc(employeeFilters.q)}" oninput="employeeFilters.q=this.value;filterEmployeeBoard()"><select id="boardCategory" onchange="employeeFilters.category=this.value;filterEmployeeBoard()"><option value="">Все направления</option>${categories.map(x=>`<option value="${esc(x)}" ${employeeFilters.category===x?'selected':''}>${esc(x)}</option>`).join('')}</select><select id="boardStatus" onchange="employeeFilters.status=this.value;filterEmployeeBoard()"><option value="">Все статусы</option>${Object.keys(STATUS_CONFIG).map(x=>`<option ${employeeFilters.status===x?'selected':''}>${x}</option>`).join('')}</select><button class="btn btn-light" onclick="resetBoardFilters()">Сбросить</button></div><div class="board" id="employeeBoard">${board.map(ideaCard).join('')||'<div class="empty">По выбранным фильтрам ничего не найдено. <button class="btn btn-light" onclick="resetBoardFilters()">Сбросить фильтры</button></div>'}</div>`}</section><section class="section"><div class="section-head"><div><h2>Мои предложения</h2><p>Только ваши идеи, включая отправленные анонимно.</p></div><span class="aside">${own.length} МОИХ ИДЕЙ</span></div><div class="my-list">${own.length?own.map(i=>`<div class="my-item"><div><b>${esc(i.title)}</b><small>ППУ-${i.id} · ${formatDate(i.createdAt)}</small></div><span class="status ${statusMeta(i.status).className}">${statusMeta(i.status).icon} ${esc(i.status)}</span><button onclick="openDetail(${i.id},false)">Подробнее ↗</button></div>`).join(''):'<div class="empty">Пока вы не отправляли предложения. Начните с шаблона выше или нажмите «Предложить идею».</div>'}</div></section>`;updateTopbar()}
-function ideaCard(i){const votes=i.votes||{},mine=i.votedBy?.[currentUser?.id]||[];return `<article class="idea" data-idea-id="${i.id}" data-search="${esc((i.title+' '+i.problem+' '+i.id+' '+i.author).toLowerCase())}" data-category="${esc(i.category)}" data-status="${esc(i.status)}"><div class="idea-top"><div><div class="idea-num">ППУ-${i.id} · ${esc(i.category)}</div><h3>${esc(i.title)}</h3></div><span class="status ${statusMeta(i.status).className}">${statusMeta(i.status).icon} ${esc(i.status)}</span></div><p>${esc(i.problem)}</p>${i.before||i.after?`<div class="idea-images">${i.before?`<div><img loading="lazy" src="${esc(i.before)}" alt="Фото до"></div>`:''}${i.after?`<div><img loading="lazy" src="${esc(i.after)}" alt="Фото после"></div>`:''}</div>`:''}<div class="idea-footer"><span class="idea-author">${esc(i.anonymous?'Анонимно':i.author)} · ${formatDate(i.createdAt)}</span><div class="vote-row">${[['support','♡ Поддержать']].map(([k,l])=>`<button class="vote ${mine.includes(k)?'active':''}" ${mine.includes(k)||!serviceSettings.voting?'disabled':''} title="${!serviceSettings.voting?'Поддержка отключена руководителем':mine.includes(k)?'Вы уже поддержали':''}" aria-pressed="${mine.includes(k)}" data-vote="${k}" onclick="vote(${i.id},'${k}')">${l} <small>${votes[k]||0}</small></button>`).join('')}</div></div><button class="link-button" onclick="openDetail(${i.id},false)">Открыть предложение →</button></article>`}
+function renderEmployee(){if(!currentUser)return;const own=myIdeas(),notices=unreadNotifications();let board=ideas.filter(i=>serviceSettings.publicBoard||i.authorId===currentUser.id).slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));board=board.filter(i=>(!employeeFilters.q||(i.title+' '+i.problem+' '+i.id+' '+i.author).toLowerCase().includes(employeeFilters.q.toLowerCase()))&&(!employeeFilters.category||i.category===employeeFilters.category)&&(!employeeFilters.status||i.status===employeeFilters.status));const boardDisabled=!serviceSettings.publicBoard;const templates=[['Модернизация','settings','Оборудование, инструменты и новые способы работы'],['Сокращение времени','clock','Устранение лишних действий и ожидания'],['Безопасность','shield','Рабочая среда, риски и профилактика'],['Качество','diamond','Стабильность результата и снижение брака'],['Экономия ресурсов','leaf','Материалы, энергия и рациональное использование'],['Другое','plus','Любые идеи, которые делают работу лучше']];$('employeeView').innerHTML=`<div class="welcome"><div><div class="eyebrow">ЛИЧНЫЙ КАБИНЕТ · ${esc((currentUser.job||'СОТРУДНИК').toUpperCase())}</div><h1>Добрый день, ${esc(currentUser.name.split(' ')[0])}!</h1><p>Ваши наблюдения могут сделать работу предприятия лучше.</p></div><button class="btn btn-primary" onclick="openIdeaForm()">＋ Предложить идею</button></div><section class="section"><div class="section-head"><div><h2>Уведомления</h2><p>Обратная связь по вашим предложениям.</p></div><span class="aside">${notices.length} НЕПРОЧИТАНО</span></div>${notices.length?`<div class="notice-stack" aria-live="polite">${notices.map(n=>`<div class="notice-item"><span><b>${esc(n.title)}</b><br>${esc(n.text)} <small>${formatDate(n.createdAt)}</small></span><button class="btn btn-light" onclick="markNoticeRead(${n.ideaId},'${esc(n.createdAt)}')">Понятно</button></div>`).join('')}</div>`:'<div class="empty">Новых уведомлений нет.</div>'}</section><section class="section"><div class="section-head"><div><h2>Картотека шаблонов и узких мест</h2><p>Выберите направление — форма предложения уже будет подготовлена.</p></div><span class="aside">БЫСТРЫЙ СТАРТ ↗</span></div><div class="template-grid">${templates.map(([a,b,c])=>`<button class="template" onclick="openTemplate('${a}')"><span class="arrow">↗</span><div class="emoji">${uiIcon(b)}</div><b>${a}</b><span>${c}</span></button>`).join('')}</div></section><section class="section"><div class="section-head"><div><h2>Доска предложений</h2><p>${boardDisabled?'Публичная доска отключена руководителем.':'Знакомьтесь с идеями коллег и поддерживайте полезные инициативы.'}</p></div><span class="aside">${board.length} ПРЕДЛОЖЕНИЙ</span></div>${boardDisabled?'<div class="empty">Публичная доска отключена руководителем. Здесь отображаются только ваши предложения.</div>':`<div class="toolbar"><input id="boardSearch" placeholder="Найти идею или проблему..." value="${esc(employeeFilters.q)}" oninput="employeeFilters.q=this.value;filterEmployeeBoard()"><select id="boardCategory" onchange="employeeFilters.category=this.value;filterEmployeeBoard()"><option value="">Все направления</option>${categories.map(x=>`<option value="${esc(x)}" ${employeeFilters.category===x?'selected':''}>${esc(x)}</option>`).join('')}</select><select id="boardStatus" onchange="employeeFilters.status=this.value;filterEmployeeBoard()"><option value="">Все статусы</option>${Object.keys(STATUS_CONFIG).map(x=>`<option ${employeeFilters.status===x?'selected':''}>${x}</option>`).join('')}</select><button class="btn btn-light" onclick="resetBoardFilters()">Сбросить</button></div><div class="board" id="employeeBoard">${board.map(ideaCard).join('')||'<div class="empty">По выбранным фильтрам ничего не найдено. <button class="btn btn-light" onclick="resetBoardFilters()">Сбросить фильтры</button></div>'}</div>`}</section><section class="section"><div class="section-head"><div><h2>Мои предложения</h2><p>Только ваши идеи, включая отправленные анонимно.</p></div><span class="aside">${own.length} МОИХ ИДЕЙ</span></div><div class="my-list">${own.length?own.map(i=>`<div class="my-item"><div><b>${esc(i.title)}</b><small>ППУ-${i.id} · ${formatDate(i.createdAt)}</small></div><span class="status ${statusMeta(i.status).className}">${statusIcon(i.status)} ${esc(i.status)}</span><button onclick="openDetail(${i.id},false)">Подробнее ↗</button></div>`).join(''):'<div class="empty">Пока вы не отправляли предложения. Начните с шаблона выше или нажмите «Предложить идею».</div>'}</div></section>`;updateTopbar()}
+function ideaCard(i){const votes=i.votes||{},mine=i.votedBy?.[currentUser?.id]||[];return `<article class="idea" data-idea-id="${i.id}" data-search="${esc((i.title+' '+i.problem+' '+i.id+' '+i.author).toLowerCase())}" data-category="${esc(i.category)}" data-status="${esc(i.status)}"><div class="idea-top"><div><div class="idea-num">ППУ-${i.id} · ${esc(i.category)}</div><h3>${esc(i.title)}</h3></div><span class="status ${statusMeta(i.status).className}">${statusIcon(i.status)} ${esc(i.status)}</span></div><p>${esc(i.problem)}</p>${i.before||i.after?`<div class="idea-images">${i.before?`<div><img loading="lazy" src="${esc(i.before)}" alt="Фото до"></div>`:''}${i.after?`<div><img loading="lazy" src="${esc(i.after)}" alt="Фото после"></div>`:''}</div>`:''}<div class="idea-footer"><span class="idea-author">${esc(i.anonymous?'Анонимно':i.author)} · ${formatDate(i.createdAt)}</span><div class="vote-row">${[['support',uiIcon('heart')+' Поддержать']].map(([k,l])=>`<button class="vote ${mine.includes(k)?'active':''}" ${mine.includes(k)||!serviceSettings.voting?'disabled':''} title="${!serviceSettings.voting?'Поддержка отключена руководителем':mine.includes(k)?'Вы уже поддержали':''}" aria-pressed="${mine.includes(k)}" data-vote="${k}" onclick="vote(${i.id},'${k}')">${l} <small>${votes[k]||0}</small></button>`).join('')}</div></div><button class="link-button" onclick="openDetail(${i.id},false)">Открыть предложение →</button></article>`}
 function filterEmployeeBoard(){const q=employeeFilters.q.toLowerCase(),board=$('employeeBoard');if(!board)return;board.querySelector('.filter-empty')?.remove();const cards=[...board.querySelectorAll('.idea')];cards.forEach(el=>el.classList.toggle('hidden',!(el.dataset.search.includes(q)&&(!employeeFilters.category||el.dataset.category===employeeFilters.category)&&(!employeeFilters.status||el.dataset.status===employeeFilters.status))));if(cards.length&&!cards.some(el=>!el.classList.contains('hidden')))board.insertAdjacentHTML('beforeend','<div class="empty filter-empty">По выбранным фильтрам ничего не найдено. <button class="btn btn-light" onclick="resetBoardFilters()">Сбросить фильтры</button></div>')}
 function resetBoardFilters(){employeeFilters={q:'',category:'',status:''};renderEmployee()}
 function markNoticeRead(id,createdAt){const i=ideas.find(x=>x.id===id);const n=i?.notifications?.find(x=>x.createdAt===createdAt);if(n)n.read=true;persistDemo();renderEmployee()}
@@ -241,15 +500,15 @@ function markHistory(i,status,comment=''){i.history.push({status,at:new Date().t
 function renderSidebar(){const items=current==='admin'?[['incoming','↘','Входящие'],['review','◷','На рассмотрении'],['rework','↻','На доработке'],['processed','✓','Обработанные']]:[['overview','◫','Обзор'],['all','▤','Все предложения'],['incoming','↘','Входящие'],['review','◷','На рассмотрении'],['rework','↻','На доработке'],['processed','✓','Обработанные'],['effectiveness','⌁','Эффективность'],['users','♙','Пользователи'],['form','▧','Настройка формы'],['company','✳','Оформление предприятия'],['settings','⚙','Настройки сервиса'],['export','⇩','Экспорт данных']];$('sidebar').innerHTML=`<div class="side-label">${current==='chief'?'ПАНЕЛЬ УПРАВЛЕНИЯ':'РАБОЧАЯ ОЧЕРЕДЬ'}</div>${items.map(([id,ic,label])=>`<button class="nav-btn ${adminPage===id?'active':''}" ${adminPage===id?'aria-current="page"':''} onclick="goAdmin('${id}')"><span aria-hidden="true">${ic}</span>${label}${['incoming','review','rework'].includes(id)?`<small class="nav-count" aria-live="polite">${countStatus(id)}</small>`:''}</button>`).join('')}${current==='admin'?'<div class="side-foot">Панель модератора<br>Обработка предложений</div>':''}`}
 function countStatus(p){return ideas.filter(i=>p==='incoming'?i.status==='Новая':p==='review'?i.status==='На рассмотрении':i.status==='Требует доработки').length}
 function renderAdmin(){renderSidebar();$('adminContent').innerHTML=adminPage==='overview'?overviewHTML():['all','incoming','review','rework','processed'].includes(adminPage)?listHTML():adminPage==='effectiveness'?effectivenessHTML():adminPage==='users'?usersHTML():adminPage==='form'?formHTML():adminPage==='company'?companyHTML():settingsHTML();applyBrand();if(['all','incoming','review','rework','processed'].includes(adminPage))refreshAdminRows()}
-function proposalRow(i){const s=statusMeta(i.status);return `<div class="proposal" data-id="${i.id}" data-title="${esc((i.title+' '+i.author+' '+i.id).toLowerCase())}" data-dept="${esc(i.dept)}" data-status="${esc(i.status)}"><div><b>ППУ-${i.id} · ${esc(i.title)}</b><small>${formatDate(i.createdAt)} · ${esc(i.category)}</small></div><div>${esc(i.anonymous?'Анонимно':i.author)}</div><div>${esc(i.dept)}</div><div><span class="status ${s.className}">${s.icon} ${esc(i.status)}</span></div><div><button class="btn btn-light" onclick="openDetail(${i.id},true)">Открыть →</button></div></div>`}
+function proposalRow(i){const s=statusMeta(i.status);return `<div class="proposal" data-id="${i.id}" data-title="${esc((i.title+' '+i.author+' '+i.id).toLowerCase())}" data-dept="${esc(i.dept)}" data-status="${esc(i.status)}"><div><b>ППУ-${i.id} · ${esc(i.title)}</b><small>${formatDate(i.createdAt)} · ${esc(i.category)}</small></div><div>${esc(i.anonymous?'Анонимно':i.author)}</div><div>${esc(i.dept)}</div><div><span class="status ${s.className}">${statusIcon(i.status)} ${esc(i.status)}</span></div><div><button class="btn btn-light" onclick="openDetail(${i.id},true)">Открыть →</button></div></div>`}
 function filteredAdminIdeas(){const map={all:()=>true,incoming:i=>i.status==='Новая',review:i=>i.status==='На рассмотрении',rework:i=>i.status==='Требует доработки',processed:i=>['Одобрена','Внедрена','Отклонена'].includes(i.status)};return ideas.filter(map[adminPage]||map.all).filter(i=>(!adminFilters.q||(i.title+' '+i.author+' '+i.id+' '+i.problem).toLowerCase().includes(adminFilters.q.toLowerCase()))&&(!adminFilters.dept||i.dept===adminFilters.dept)&&(!adminFilters.status||i.status===adminFilters.status)).sort((a,b)=>{let x=sortBy==='title'?a.title.toLowerCase():sortBy==='author'?a.author.toLowerCase():sortBy==='status'?a.status:new Date(a.createdAt).getTime();let y=sortBy==='title'?b.title.toLowerCase():sortBy==='author'?b.author.toLowerCase():sortBy==='status'?b.status:new Date(b.createdAt).getTime();return (x>y?1:x<y?-1:0)*sortDir})}
 function listHTML(){const all=ideas.filter(i=>adminPage==='all'||(adminPage==='incoming'?i.status==='Новая':adminPage==='review'?i.status==='На рассмотрении':adminPage==='rework'?i.status==='Требует доработки':['Одобрена','Внедрена','Отклонена'].includes(i.status)));return `<div class="admin-head"><div><div class="eyebrow">УПРАВЛЕНИЕ ПРЕДЛОЖЕНИЯМИ</div><h1>${({all:'Все предложения',incoming:'Входящие',review:'На рассмотрении',rework:'На доработке',processed:'Обработанные'})[adminPage]}</h1><p>Обрабатывайте идеи, оставляйте обратную связь и фиксируйте результат.</p></div>${current==='chief'?'<button class="btn btn-line" onclick="goAdmin(\'export\')">Экспорт данных</button>':''}</div><div class="stats"><div class="stat"><span>В ЭТОМ РАЗДЕЛЕ</span><strong>${all.length}</strong><small>Предложений</small></div><div class="stat"><span>ВСЕГО В СИСТЕМЕ</span><strong>${ideas.length}</strong><small>Включая архивные</small></div><div class="stat"><span>ПОДРАЗДЕЛЕНИЙ</span><strong>${new Set(ideas.map(i=>i.dept)).size}</strong><small>С активностью</small></div><div class="stat"><span>ВНЕДРЕНО</span><strong>${ideas.filter(i=>i.status==='Внедрена').length}</strong><small>С зафиксированным эффектом</small></div></div><div class="toolbar"><input id="adminSearch" placeholder="Поиск по номеру, названию или автору..." value="${esc(adminFilters.q)}" oninput="adminFilters.q=this.value;currentPage=1;refreshAdminRows()"><select id="adminDept" onchange="adminFilters.dept=this.value;currentPage=1;refreshAdminRows()"><option value="">Все подразделения</option>${[...new Set(ideas.map(i=>i.dept))].sort().map(d=>`<option ${adminFilters.dept===d?'selected':''}>${esc(d)}</option>`).join('')}</select><select id="adminStatus" onchange="adminFilters.status=this.value;currentPage=1;refreshAdminRows()"><option value="">Все статусы</option>${Object.keys(STATUS_CONFIG).map(s=>`<option ${adminFilters.status===s?'selected':''}>${s}</option>`).join('')}</select><select onchange="pageSize=Number(this.value);currentPage=1;refreshAdminRows()"><option value="20">20 на странице</option><option value="50">50 на странице</option><option value="100">100 на странице</option></select></div><div class="proposal-table"><div class="proposal table-head"><button onclick="setSort('date')">Предложение · дата ${sortBy==='date'?(sortDir===1?'↑':'↓'):''}</button><button onclick="setSort('author')">Автор ${sortBy==='author'?(sortDir===1?'↑':'↓'):''}</button><button>Подразделение</button><button onclick="setSort('status')">Статус ${sortBy==='status'?(sortDir===1?'↑':'↓'):''}</button><button></button></div><div id="proposalRows"></div></div><div id="pagination" class="pagination"></div>`}
 function setSort(key){if(sortBy===key)sortDir*=-1;else{sortBy=key;sortDir=1}refreshAdminRows()}
 function refreshAdminRows(){const target=$('proposalRows');if(!target)return;const arr=filteredAdminIdeas(),pages=Math.max(1,Math.ceil(arr.length/pageSize));currentPage=Math.min(currentPage,pages);const slice=arr.slice((currentPage-1)*pageSize,currentPage*pageSize);target.innerHTML=slice.map(proposalRow).join('')||'<div class="empty">По заданным условиям ничего не найдено.</div>';$('pagination').innerHTML=`<span class="pagination-summary">Показано <b>${arr.length?((currentPage-1)*pageSize+1):0}–${Math.min(currentPage*pageSize,arr.length)}</b> из ${arr.length}</span><div class="pagination-controls"><button class="btn btn-light" ${currentPage===1?'disabled':''} onclick="currentPage--;refreshAdminRows()">← Назад</button><b>${currentPage} / ${pages}</b><button class="btn btn-light" ${currentPage===pages?'disabled':''} onclick="currentPage++;refreshAdminRows()">Далее →</button></div>`}
 function filterAdminRows(){adminFilters={q:$('adminSearch')?.value||'',dept:$('adminDept')?.value||'',status:$('adminStatus')?.value||''};currentPage=1;refreshAdminRows()}
-function overviewHTML(){const total=ideas.length,done=ideas.filter(i=>i.status==='Внедрена').length,approved=ideas.filter(i=>i.status==='Одобрена').length,review=ideas.filter(i=>i.status==='На рассмотрении').length,dept=[...new Set(ideas.map(i=>i.dept))];const bars=Object.keys(STATUS_CONFIG).map(s=>{const n=ideas.filter(i=>i.status===s).length;return `<div class="bar-row"><span>${statusMeta(s).icon} ${s}</span><div class="bar-track"><i class="bar-${statusMeta(s).key}" style="width:${total?n/total*100:0}%"></i></div><b>${n}</b></div>`}).join('');return `<div class="admin-head"><div><div class="eyebrow">ОБЩАЯ КАРТИНА</div><h1>Обзор IdeaHub</h1><p>Сводка по инициативам, статусам и результатам предприятия.</p></div><button class="btn btn-primary" onclick="goAdmin('all')">Все предложения →</button></div><div class="stats"><div class="stat"><span>ВСЕГО ИДЕЙ</span><strong>${total}</strong><small>За всё время</small></div><div class="stat"><span>ВНЕДРЕНО</span><strong>${done}</strong><small>${total?Math.round(done/total*100):0}% от всех предложений</small></div><div class="stat"><span>ОДОБРЕНО</span><strong>${approved}</strong><small>Ожидают реализации</small></div><div class="stat"><span>НА РАССМОТРЕНИИ</span><strong>${review}</strong><small>Требуют решения</small></div></div><div class="two-col"><div class="panel"><h3>Распределение по статусам</h3><p>Текущее состояние потока предложений.</p>${bars}</div><div class="panel"><h3>Последние инициативы</h3><p>Недавно добавленные предложения.</p><div class="my-list">${ideas.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5).map(i=>`<div class="my-item"><div><b>${esc(i.title)}</b><small>ППУ-${i.id} · ${formatDate(i.createdAt)}</small></div><span class="status ${statusMeta(i.status).className}">${esc(i.status)}</span><button onclick="openDetail(${i.id},true)">Открыть</button></div>`).join('')}</div></div></div><div class="panel" style="margin-top:16px"><h3>Активность подразделений</h3><p>Количество предложений от каждого подразделения.</p>${dept.map(d=>`<div class="bar-row"><span>${esc(d)}</span><div class="bar-track"><i style="width:${ideas.filter(i=>i.dept===d).length/Math.max(1,total)*100}%"></i></div><b>${ideas.filter(i=>i.dept===d).length}</b></div>`).join('')}</div>`}
+function overviewHTML(){const total=ideas.length,done=ideas.filter(i=>i.status==='Внедрена').length,approved=ideas.filter(i=>i.status==='Одобрена').length,review=ideas.filter(i=>i.status==='На рассмотрении').length,dept=[...new Set(ideas.map(i=>i.dept))];const bars=Object.keys(STATUS_CONFIG).map(s=>{const n=ideas.filter(i=>i.status===s).length;return `<div class="bar-row"><span>${statusIcon(s)} ${s}</span><div class="bar-track"><i class="bar-${statusMeta(s).key}" style="width:${total?n/total*100:0}%"></i></div><b>${n}</b></div>`}).join('');return `<div class="admin-head"><div><div class="eyebrow">ОБЩАЯ КАРТИНА</div><h1>Обзор IdeaHub</h1><p>Сводка по инициативам, статусам и результатам предприятия.</p></div><button class="btn btn-primary" onclick="goAdmin('all')">Все предложения →</button></div><div class="stats"><div class="stat"><span>ВСЕГО ИДЕЙ</span><strong>${total}</strong><small>За всё время</small></div><div class="stat"><span>ВНЕДРЕНО</span><strong>${done}</strong><small>${total?Math.round(done/total*100):0}% от всех предложений</small></div><div class="stat"><span>ОДОБРЕНО</span><strong>${approved}</strong><small>Ожидают реализации</small></div><div class="stat"><span>НА РАССМОТРЕНИИ</span><strong>${review}</strong><small>Требуют решения</small></div></div><div class="two-col"><div class="panel"><h3>Распределение по статусам</h3><p>Текущее состояние потока предложений.</p>${bars}</div><div class="panel"><h3>Последние инициативы</h3><p>Недавно добавленные предложения.</p><div class="my-list">${ideas.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5).map(i=>`<div class="my-item"><div><b>${esc(i.title)}</b><small>ППУ-${i.id} · ${formatDate(i.createdAt)}</small></div><span class="status ${statusMeta(i.status).className}">${esc(i.status)}</span><button onclick="openDetail(${i.id},true)">Открыть</button></div>`).join('')}</div></div></div><div class="panel" style="margin-top:16px"><h3>Активность подразделений</h3><p>Количество предложений от каждого подразделения.</p>${dept.map(d=>`<div class="bar-row"><span>${esc(d)}</span><div class="bar-track"><i style="width:${ideas.filter(i=>i.dept===d).length/Math.max(1,total)*100}%"></i></div><b>${ideas.filter(i=>i.dept===d).length}</b></div>`).join('')}</div>`}
 function effectivenessHTML(){const done=ideas.filter(i=>i.status==='Внедрена'),withEffect=done.filter(i=>i.actual||i.saving||i.cost);const sumVotes=done.reduce((n,i)=>n+Object.values(i.votes||{}).reduce((a,b)=>a+Number(b||0),0),0);return `<div class="admin-head"><div><div class="eyebrow">РЕЗУЛЬТАТЫ И ИЗМЕНЕНИЯ</div><h1>Эффективность</h1><p>Собранные фактические результаты внедрённых инициатив.</p></div></div><div class="stats"><div class="stat"><span>ВНЕДРЕНО</span><strong>${done.length}</strong><small>Решений запущено</small></div><div class="stat"><span>ЭФФЕКТ ЗАПОЛНЕН</span><strong>${withEffect.length}</strong><small>Есть фактические данные</small></div><div class="stat"><span>ПОДДЕРЖАЛИ</span><strong>${sumVotes}</strong><small>По всем идеям</small></div><div class="stat"><span>ОЖИДАЮТ ОЦЕНКИ</span><strong>${done.length-withEffect.length}</strong><small>Нужно дополнить</small></div></div><div class="panel"><h3>Внедрённые предложения</h3><p>Откройте карточку, чтобы посмотреть или обновить фактический эффект.</p><div class="my-list">${done.length?done.map(i=>`<div class="my-item"><div><b>${esc(i.title)}</b><small>ППУ-${i.id} · ${esc(i.dept)} · ${formatDate(i.createdAt)}</small></div><span class="status st-done">★ Внедрена</span><button onclick="openDetail(${i.id},true)">Результат →</button></div>`).join(''):'<div class="empty">Пока нет внедрённых предложений.</div>'}</div></div>`}
-function openDetail(id,admin){const i=ideas.find(x=>x.id===id);if(!i)return;modalReturnFocus=document.activeElement;activeId=id;const s=statusMeta(i.status),history=i.history.map(h=>`<div class="timeline-item"><b>${esc(h.status||'Обновление')}</b><small>${formatDate(h.at)} · ${esc(h.by||'Система')}</small>${h.comment?`<p>${esc(h.comment)}</p>`:''}</div>`).join('');let html=`<div class="modal-head"><div><div class="eyebrow">ППУ-${i.id} · ${esc(i.category)}</div><h2>${esc(i.title)}</h2><p>${esc(i.anonymous?'Анонимно':i.author)} · ${esc(i.dept)} · ${formatDate(i.createdAt)}</p></div><button class="close" aria-label="Закрыть" onclick="closeModal('detailModal')">×</button></div><div><span class="status ${s.className}">${s.icon} ${esc(i.status)}</span></div>${i.before||i.after?`<div class="idea-images">${i.before?`<div><img src="${i.before}" alt="Фото до"></div>`:''}${i.after?`<div><img src="${i.after}" alt="Фото после"></div>`:''}</div>`:''}<div class="detail"><label>Проблема</label><p>${esc(i.problem)}</p></div><div class="detail"><label>Предлагаемое решение</label><p>${esc(i.solution)}</p></div><div class="detail"><label>Ожидаемый эффект</label><p>${esc(i.effect||'Не указан')}</p></div>${i.comment?`<div class="detail"><label>Комментарий модератора</label><p>${esc(i.comment)}</p></div>`:''}<div class="detail"><label>История изменений</label><div class="timeline">${history}</div></div>`;if(admin&&current!=='employee'){html+=`<div class="field"><label for="decisionComment">Комментарий / следующий шаг</label><textarea id="decisionComment" placeholder="Укажите причину решения или что необходимо уточнить...">${esc(i.comment||'')}</textarea></div><div class="decision sticky-decision">${i.status!=='На рассмотрении'?'<button class="btn btn-light" onclick="setDecision(\'На рассмотрении\')">Взять в работу</button>':''}<button class="btn btn-light" onclick="setDecision('Требует доработки')">↻ На доработку</button><button class="btn btn-primary" onclick="setDecision('Одобрена')">✓ Одобрить</button><button class="btn btn-danger" onclick="confirmReject()">Отклонить</button>${['Одобрена','Внедрена'].includes(i.status)?`<button class="btn btn-success" onclick="${i.status==='Внедрена'?`openEffect(${i.id})`:`setDecision('Внедрена')`}">${i.status==='Внедрена'?'★ Изменить эффект':'Отметить внедрённой'}</button>`:''}</div>${i.status==='Внедрена'?`<div class="detail"><label>Фактический результат</label><p>${esc(i.actual||'Не заполнен')}<br>Затраты: ${esc(i.cost||'Не указаны')} · Экономия / эффект: ${esc(i.saving||'Не указана')}</p><button class="btn btn-light" onclick="openEffect(${i.id})">Заполнить / изменить эффект →</button></div>`:''}`}else{html+=`<div class="form-actions"><button class="btn btn-light" onclick="closeModal('detailModal')">Закрыть</button>${i.authorId===currentUser?.id&&i.status==='Требует доработки'?`<button class="btn btn-primary" onclick="editOwnIdea(${i.id})">Исправить и отправить повторно</button>`:''}</div>`}$('detailBody').innerHTML=html;$('detailModal').classList.add('show');$('detailBody').querySelector('.close')?.focus()}
+function openDetail(id,admin){const i=ideas.find(x=>x.id===id);if(!i)return;modalReturnFocus=document.activeElement;activeId=id;const s=statusMeta(i.status),history=i.history.map(h=>`<div class="timeline-item"><b>${esc(h.status||'Обновление')}</b><small>${formatDate(h.at)} · ${esc(h.by||'Система')}</small>${h.comment?`<p>${esc(h.comment)}</p>`:''}</div>`).join('');let html=`<div class="modal-head"><div><div class="eyebrow">ППУ-${i.id} · ${esc(i.category)}</div><h2>${esc(i.title)}</h2><p>${esc(i.anonymous?'Анонимно':i.author)} · ${esc(i.dept)} · ${formatDate(i.createdAt)}</p></div><button class="close" aria-label="Закрыть" onclick="closeModal('detailModal')">×</button></div><div><span class="status ${s.className}">${statusIcon(i.status)} ${esc(i.status)}</span></div>${i.before||i.after?`<div class="idea-images">${i.before?`<div><img src="${i.before}" alt="Фото до"></div>`:''}${i.after?`<div><img src="${i.after}" alt="Фото после"></div>`:''}</div>`:''}<div class="detail"><label>Проблема</label><p>${esc(i.problem)}</p></div><div class="detail"><label>Предлагаемое решение</label><p>${esc(i.solution)}</p></div><div class="detail"><label>Ожидаемый эффект</label><p>${esc(i.effect||'Не указан')}</p></div>${i.comment?`<div class="detail"><label>Комментарий модератора</label><p>${esc(i.comment)}</p></div>`:''}<div class="detail"><label>История изменений</label><div class="timeline">${history}</div></div>`;if(admin&&current!=='employee'){html+=`<div class="field"><label for="decisionComment">Комментарий / следующий шаг</label><textarea id="decisionComment" placeholder="Укажите причину решения или что необходимо уточнить...">${esc(i.comment||'')}</textarea></div><div class="decision sticky-decision">${i.status!=='На рассмотрении'?'<button class="btn btn-light" onclick="setDecision(\'На рассмотрении\')">Взять в работу</button>':''}<button class="btn btn-light" onclick="setDecision('Требует доработки')">↻ На доработку</button><button class="btn btn-primary" onclick="setDecision('Одобрена')">✓ Одобрить</button><button class="btn btn-danger" onclick="confirmReject()">Отклонить</button>${['Одобрена','Внедрена'].includes(i.status)?`<button class="btn btn-success" onclick="${i.status==='Внедрена'?`openEffect(${i.id})`:`setDecision('Внедрена')`}">${i.status==='Внедрена'?'★ Изменить эффект':'Отметить внедрённой'}</button>`:''}</div>${i.status==='Внедрена'?`<div class="detail"><label>Фактический результат</label><p>${esc(i.actual||'Не заполнен')}<br>Затраты: ${esc(i.cost||'Не указаны')} · Экономия / эффект: ${esc(i.saving||'Не указана')}</p><button class="btn btn-light" onclick="openEffect(${i.id})">Заполнить / изменить эффект →</button></div>`:''}`}else{html+=`<div class="form-actions"><button class="btn btn-light" onclick="closeModal('detailModal')">Закрыть</button>${i.authorId===currentUser?.id&&i.status==='Требует доработки'?`<button class="btn btn-primary" onclick="editOwnIdea(${i.id})">Исправить и отправить повторно</button>`:''}</div>`}$('detailBody').innerHTML=html;$('detailModal').classList.add('show');$('detailBody').querySelector('.close')?.focus()}
 function setDecision(status){const i=ideas.find(x=>x.id===activeId);if(!i)return;if(status==='Внедрена'&&i.status!=='Одобрена'&&i.status!=='Внедрена'){toast('Сначала одобрите предложение');return}const comment=$('decisionComment')?.value.trim()||pendingDecisionComment||i.comment||'';pendingDecisionComment='';const old=i.status;i.comment=comment;i.status=status;markHistory(i,status,comment);if(serviceSettings.statusNotifications&&i.authorId)i.notifications.push({text:`Статус вашего предложения ППУ-${i.id} изменён: ${status}`,createdAt:new Date().toISOString(),read:false});persistDemo();closeModal('detailModal');renderAdmin();toast(`Статус изменён: ${status}`,old==='Новая'?'Отменить':null,old==='Новая'?()=>{i.status=old;markHistory(i,old,'Изменение отменено');persistDemo();renderAdmin()}:null)}
 function confirmReject(){const i=ideas.find(x=>x.id===activeId);if(!i)return;pendingDecisionComment=$('decisionComment')?.value.trim()||i.comment||'';showConfirm('Отклонить предложение?',`«${i.title}» будет переведено в статус «Отклонена». Автор увидит комментарий руководителя.`,()=>setDecision('Отклонена'))}
 function showConfirm(title,description,yes){modalReturnFocus=document.activeElement;$('detailBody').innerHTML=`<div class="modal-head"><div><h2>${esc(title)}</h2><p>${esc(description)}</p></div><button class="close" onclick="closeModal('detailModal')">×</button></div><div class="form-actions"><button class="btn btn-light" onclick="pendingDecisionComment='';closeModal('detailModal');renderAdmin()">Отмена</button><button class="btn btn-danger" id="confirmAction">Подтвердить</button></div>`;$('detailModal').classList.add('show');$('confirmAction').onclick=()=>{closeModal('detailModal');yes()};$('confirmAction').focus()}

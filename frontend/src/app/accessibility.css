@@ -1,0 +1,224 @@
+/* Shared by the application and the standalone HTML reference. */
+:root {
+  --muted: #526259;
+  --accent-text: #245a40;
+  --accent-surface: #e8f2eb;
+  --accent-surface-text: #245a40;
+  --on-brand: #ffffff;
+  --brand-hover: #2c6248;
+  --on-brand-hover: #ffffff;
+}
+html[data-theme='dark'] {
+  --muted: #afbeb3;
+  --accent-text: #b7dec5;
+  --accent-surface: #22382b;
+  --accent-surface-text: #b7dec5;
+}
+.ui-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
+}
+html[data-theme] .template .emoji,
+html[data-theme] .catalog-icon {
+  background: var(--accent-surface);
+  color: var(--accent-surface-text);
+}
+.template .emoji .ui-icon,
+.catalog-icon .ui-icon {
+  width: 23px;
+  height: 23px;
+}
+html[data-theme] .status::before {
+  content: none !important;
+  display: none !important;
+}
+.status {
+  gap: 5px;
+}
+.status .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+.vote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.vote .ui-icon {
+  width: 15px;
+  height: 15px;
+}
+html[data-theme] .idea p,
+html[data-theme] .idea-author,
+html[data-theme] .idea-num,
+html[data-theme] .empty,
+html[data-theme] .empty p,
+html[data-theme] .stat span,
+html[data-theme] .stat small,
+html[data-theme] .company-label,
+html[data-theme] .brand-light,
+html[data-theme] .section-head .aside,
+html[data-theme] .eyebrow,
+html[data-theme] .side-label,
+html[data-theme] .side-foot,
+html[data-theme] .art-note,
+html[data-theme] .login-foot,
+html[data-theme] .file-hint,
+html[data-theme] .counter,
+html[data-theme] .template span:not(.emoji),
+html[data-theme] .my-item small {
+  color: var(--muted);
+}
+html[data-theme] .nav-btn {
+  color: var(--muted);
+}
+html[data-theme] .nav-btn.active,
+html[data-theme] .nav-btn:hover,
+html[data-theme] .nav-count,
+html[data-theme] .avatar,
+html[data-theme] .preview-form-note {
+  background: var(--accent-surface);
+  color: var(--accent-surface-text);
+}
+html[data-theme] .link-button,
+html[data-theme] .text-link,
+html[data-theme] .login-switch,
+html[data-theme] .password-toggle,
+html[data-theme] .forgot-link,
+html[data-theme] .empty-icon,
+html[data-theme] .demo-details summary {
+  color: var(--accent-text);
+}
+html[data-theme] .pagination-summary b {
+  color: var(--accent-text);
+}
+html[data-theme] input::placeholder,
+html[data-theme] textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+html[data-theme] .btn-primary {
+  background: var(--brand);
+  color: var(--on-brand);
+  transition-property: transform, box-shadow;
+}
+html[data-theme] .btn-primary:hover:not(:disabled) {
+  background: var(--brand-hover);
+  color: var(--on-brand-hover);
+}
+html[data-theme] .topbar .brandmark,
+html[data-theme] .login-art .brandmark {
+  color: var(--on-brand);
+}
+html[data-theme] .welcome .btn-primary,
+html[data-theme] .company-banner .btn-primary {
+  background: var(--lime);
+  color: #214b35;
+}
+html[data-theme] .welcome .eyebrow,
+html[data-theme] .welcome p {
+  color: #e2eee6;
+}
+html[data-theme] .status {
+  background: #edf2ed;
+  color: #526259;
+}
+html[data-theme] .status.st-new {
+  background: #eaf1ff;
+  color: #28568d;
+}
+html[data-theme] .status.st-review {
+  background: #fff2d9;
+  color: #77521a;
+}
+html[data-theme] .status.st-rework {
+  background: #f1eaff;
+  color: #604389;
+}
+html[data-theme] .status.st-ok {
+  background: #e5f3e9;
+  color: #235d3e;
+}
+html[data-theme] .status.st-done {
+  background: #e9e5f8;
+  color: #58408f;
+}
+html[data-theme] .status.st-no {
+  background: #fae9e6;
+  color: #8d4037;
+}
+html[data-theme='dark'] .status {
+  background: #29372e;
+  color: #d4dfd7;
+}
+html[data-theme='dark'] .status.st-new {
+  background: #243653;
+  color: #a8c4f4;
+}
+html[data-theme='dark'] .status.st-review {
+  background: #44381f;
+  color: #f0ce83;
+}
+html[data-theme='dark'] .status.st-rework {
+  background: #392c4d;
+  color: #cbb5ef;
+}
+html[data-theme='dark'] .status.st-ok {
+  background: #203c2b;
+  color: #a5d6b2;
+}
+html[data-theme='dark'] .status.st-done {
+  background: #332c4b;
+  color: #c5b8f0;
+}
+html[data-theme='dark'] .status.st-no {
+  background: #482d29;
+  color: #efb0a7;
+}
+html[data-theme] .idea-footer {
+  border-color: var(--line);
+}
+html[data-theme] .brand-preview {
+  background: #f4f7f3;
+  color: #202923;
+}
+html[data-theme] .brand-preview p {
+  color: #526259;
+}
+html[data-theme] .company-banner p {
+  color: inherit;
+}
+.company-banner-content {
+  padding: 16px;
+  border-radius: 10px;
+}
+html[data-theme] .logo-surface.light > span {
+  color: #245a40;
+}
+html[data-theme] .logo-surface.dark > span {
+  color: #b7dec5;
+}
+html[data-theme] .dark-preview {
+  background: #17231c;
+  color: #edf4ee;
+}
+html[data-theme] .dark-preview p {
+  color: #d2dfd6;
+}
+html[data-theme] .dark-preview .brand-light {
+  color: #afbeb3;
+}
+/* The original standalone header uses inline colors instead of classes. */
+html[data-theme] #companyLabel,
+html[data-theme] .brand > span[style] {
+  color: var(--muted) !important;
+}

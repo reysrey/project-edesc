@@ -1,6 +1,7 @@
 import type { Suggestion } from '../../shared/api/contracts'
 import { formatDate } from '../../shared/lib/format'
 import { Status } from './Status'
+import { Icon } from '../../shared/ui/Icon'
 
 export function SuggestionCard({
   suggestion,
@@ -27,7 +28,7 @@ export function SuggestionCard({
             title="Поддержка идей пока недоступна"
             aria-describedby={`support-${suggestion.id}`}
           >
-            ♡ Поддержать
+            <Icon name="heart" /> Поддержать
           </button>
         </div>
       </div>

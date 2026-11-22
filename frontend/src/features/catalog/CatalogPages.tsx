@@ -13,6 +13,8 @@ import { isLeader } from '../auth/roles'
 import { Empty, ErrorMessage, Loading, PageHead } from '../../shared/ui/Feedback'
 import { Modal } from '../../shared/ui/Modal'
 import { SuggestionForm } from '../suggestions/SuggestionForm'
+import { Icon } from '../../shared/ui/Icon'
+import { templateIcon } from './templateIcon'
 
 export function DepartmentsPage() {
   const manager = isLeader(useOutletContext<Profile>())
@@ -241,7 +243,7 @@ export function TemplatesPage() {
           {visible.map((t) => (
             <article className="panel" key={t.id}>
               <div className="catalog-icon" aria-hidden="true">
-                {t.type === 'Bottleneck' ? '◷' : '✦'}
+                <Icon name={templateIcon(t)} />
               </div>
               <span className="idea-num">{t.type === 'Bottleneck' ? 'УЗКОЕ МЕСТО' : 'ШАБЛОН'}</span>
               <h2>{t.title}</h2>

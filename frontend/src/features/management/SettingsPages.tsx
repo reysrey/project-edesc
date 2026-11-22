@@ -5,6 +5,7 @@ import { PageHead } from '../../shared/ui/Feedback'
 import { Unavailable } from '../../shared/ui/Unavailable'
 import { roleLabels, roleOf } from '../auth/roles'
 import { Brand } from '../../app/Theme'
+import { onColor, readableColor } from '../../shared/lib/colors'
 
 export function UsersPage() {
   const profile = useOutletContext<Profile>()
@@ -149,15 +150,7 @@ export function CompanyPage() {
   const [logo, setLogo] = useState('')
   const [pattern, setPattern] = useState('')
   const [error, setError] = useState('')
-  const channels = color
-    .slice(1)
-    .match(/.{2}/g)!
-    .map((value) => {
-      const channel = parseInt(value, 16) / 255
-      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
-    })
-  const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
-  const foreground = luminance > 0.179 ? '#000000' : '#ffffff'
+  const foreground = onColor(color)
   useEffect(
     () => () => {
       if (logo) URL.revokeObjectURL(logo)
@@ -294,17 +287,23 @@ export function CompanyPage() {
                 backgroundImage: pattern ? `url("${pattern}")` : undefined,
               }}
             >
-              <div className="brand-preview-title">Идеи меняют работу.</div>
-              <p>Внутреннее пространство предложений и улучшений.</p>
-              <button className="btn btn-primary" disabled>
-                Предложить идею
-              </button>
+              <div
+                className="company-banner-content"
+                style={{ background: color, color: foreground }}
+              >
+                <div className="brand-preview-title">Идеи меняют работу.</div>
+                <p>Внутреннее пространство предложений и улучшений.</p>
+                <button className="btn btn-primary" disabled>
+                  Предложить идею
+                </button>
+              </div>
             </div>
           </div>
           <div className="dark-preview">
             <Brand />
             <p>
-              Тёмная поверхность · <b style={{ color }}>фирменный акцент</b>
+              Тёмная поверхность ·{' '}
+              <b style={{ color: readableColor(color, '#17231c') }}>фирменный акцент</b>
             </p>
           </div>
         </div>

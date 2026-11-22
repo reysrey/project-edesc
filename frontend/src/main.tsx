@@ -6,6 +6,7 @@ import { ApiError, setUnauthorizedHandler } from './shared/api/client'
 import { sessionKey } from './features/auth/session'
 import './app/design.css'
 import './app/styles.css'
+import './app/accessibility.css'
 
 const client = new QueryClient({
   defaultOptions: {
