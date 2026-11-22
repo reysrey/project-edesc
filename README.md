@@ -2,6 +2,8 @@
 
 Внутреннее приложение для предложений по улучшению предприятия. Backend: .NET 10, ASP.NET Core Minimal API, PostgreSQL, Clean Architecture/CQRS. Frontend: React, TypeScript, Vite.
 
+Сводка для передачи команде: [что сделано на фронте](docs/FRONTEND_STATUS.md) и [конкретные задания для бэкенда](docs/BACKEND_HANDOFF.md).
+
 ## Локальный запуск
 
 Нужны .NET SDK **10.0.402 или совместимый по global.json** (проверено с 10.0.404), Docker Desktop и Node.js 24 LTS.
