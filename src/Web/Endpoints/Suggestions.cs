@@ -3,6 +3,7 @@ using KaizenBoard.Application.Features.Suggestions.Commands.CreateSuggestion;
 using KaizenBoard.Application.Features.Suggestions.Commands.ReturnByManager;
 using KaizenBoard.Application.Features.Suggestions.Commands.SubmitSuggestion;
 using KaizenBoard.Application.Features.Suggestions.Queries.GetSuggestions;
+using KaizenBoard.Application.Features.Suggestions.Commands.UpdateSuggestion;
 using KaizenBoard.Infrastructure.Identity;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +18,8 @@ public class Suggestions : IEndpointGroup
         groupBuilder.RequireAuthorization();
         groupBuilder.MapPost(CreateSuggestion, "/");
         groupBuilder.MapGet(GetSuggestions, "/");
+        groupBuilder.MapGet(GetSuggestionById, "{id}");
+        groupBuilder.MapPut(UpdateSuggestion, "{id}");
         groupBuilder.MapPost(SubmitSuggestion, "{id}/submit");
         groupBuilder.MapPost(ApproveByManager, "{id}/approve");
         groupBuilder.MapPost(ReturnByManager, "{id}/return");
@@ -32,6 +35,19 @@ public class Suggestions : IEndpointGroup
     {
         var list = await sender.Send(new GetSuggestionsQuery());
         return TypedResults.Ok(list);
+    }
+
+    public static async Task<Ok<SuggestionDetailsDto>> GetSuggestionById(ISender sender, Guid id)
+    {
+        var dto = await sender.Send(new GetSuggestionByIdQuery(id));
+        return TypedResults.Ok(dto);
+    }
+
+    public static async Task<NoContent> UpdateSuggestion(ISender sender, Guid id, UpdateSuggestionCommand command)
+    {
+        command.Id = id;
+        await sender.Send(command);
+        return TypedResults.NoContent();
     }
 
     public static async Task<NoContent> SubmitSuggestion(ISender sender, Guid id)
