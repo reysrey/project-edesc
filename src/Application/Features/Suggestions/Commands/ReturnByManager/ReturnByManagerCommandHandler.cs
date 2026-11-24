@@ -1,8 +1,9 @@
-﻿using KaizenBoard.Application.Common.Exceptions;
+using KaizenBoard.Application.Common.Exceptions;
 using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Domain.Constants;
 using KaizenBoard.Domain.Entities;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace KaizenBoard.Application.Features.Suggestions.Commands.ReturnByManager;
 
@@ -20,7 +21,7 @@ public class ReturnByManagerCommandHandler : IRequestHandler<ReturnByManagerComm
     public async Task<Unit> Handle(ReturnByManagerCommand request, CancellationToken cancellationToken)
     {
         var suggestion = await _context.Suggestions.FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
-        if (suggestion == null)
+        if (suggestion == null) 
             throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
 
         var isManager = _user.Roles?.Contains(Roles.AdminL1) == true;
@@ -29,7 +30,7 @@ public class ReturnByManagerCommandHandler : IRequestHandler<ReturnByManagerComm
 
         suggestion.ReturnByManager(request.Reason);
         await _context.SaveChangesAsync(cancellationToken);
-
+        
         return Unit.Value;
     }
 }
