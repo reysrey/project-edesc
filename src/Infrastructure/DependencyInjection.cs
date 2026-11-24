@@ -45,6 +45,12 @@ public static class DependencyInjection
             .AddSignInManager()
             .AddDefaultTokenProviders();
 
+        // Перекрывает дефолтный UserClaimsPrincipalFactory<ApplicationUser>,
+        // зарегистрированный внутри AddIdentityApiEndpoints.
+        // Добавляет claim department_id в cookie при логине (B03.8).
+        builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>,
+            ApplicationUserClaimsPrincipalFactory>();
+
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();
     }
