@@ -7,17 +7,17 @@
     <File Path="global.json" />
     <File Path="README.md" />
   </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/Application/Application.csproj" />
-    <Project Path="src/Domain/Domain.csproj" />
-    <Project Path="src/Infrastructure/Infrastructure.csproj" />
-    <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
-    <Project Path="src/Web/Web.csproj" />
+  <Folder Name="/backend/src/">
+    <Project Path="backend/src/Application/Application.csproj" />
+    <Project Path="backend/src/Domain/Domain.csproj" />
+    <Project Path="backend/src/Infrastructure/Infrastructure.csproj" />
+    <Project Path="backend/src/ServiceDefaults/ServiceDefaults.csproj" />
+    <Project Path="backend/src/Web/Web.csproj" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Application.FunctionalTests/Application.FunctionalTests.csproj" />
-    <Project Path="tests/Application.UnitTests/Application.UnitTests.csproj" />
-    <Project Path="tests/Domain.UnitTests/Domain.UnitTests.csproj" />
+  <Folder Name="/backend/tests/">
+    <Project Path="backend/tests/Application.FunctionalTests/Application.FunctionalTests.csproj" />
+    <Project Path="backend/tests/Application.UnitTests/Application.UnitTests.csproj" />
+    <Project Path="backend/tests/Domain.UnitTests/Domain.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Элементы решения/">
     <File Path="docker-compose.yml" />
