@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using KaizenBoard.Application.Common.Exceptions;
 using KaizenBoard.Application.Common.Interfaces;
+using KaizenBoard.Domain.Constants;
 using KaizenBoard.Domain.Entities;
-using KaizenBoard.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,36 +10,29 @@ namespace KaizenBoard.Application.Features.Suggestions.Commands.ApproveByManager
 public class ApproveByManagerCommandHandler : IRequestHandler<ApproveByManagerCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IUser _currentUser;
+    private readonly IUser _user;
 
-    public ApproveByManagerCommandHandler(IApplicationDbContext context, IUser currentUser)
+    public ApproveByManagerCommandHandler(IApplicationDbContext context, IUser user)
     {
         _context = context;
-        _currentUser = currentUser;
+        _user = user;
     }
 
-    // B03: approve проверяет права модератора и область подраздела
     public async Task<Unit> Handle(ApproveByManagerCommand request, CancellationToken cancellationToken)
     {
         var suggestion = await _context.Suggestions.FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
-        if (suggestion is null) throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
+        if (suggestion == null) 
+            throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
 
-        var roles = _currentUser.Roles ?? new List<string>();
-        if (!roles.Contains("AdminL2") && !roles.Contains("AdminL1"))
-        {
+        // Модератор (AdminL2) может одобрять только идеи своего подразделения.
+        // Руководитель (AdminL1) может всё.
+        var isManager = _user.Roles?.Contains(Roles.AdminL1) == true;
+        if (!isManager && suggestion.TargetDepartmentId != _user.DepartmentId)
             throw new ForbiddenAccessException();
-        }
-
-        if (roles.Contains("AdminL2"))
-        {
-            var department = await _context.Departments
-                .FirstOrDefaultAsync(d => d.HeadUserId == _currentUser.Id && d.Id == suggestion.TargetDepartmentId, cancellationToken);
-            if (department is null) throw new ForbiddenAccessException();
-        }
 
         suggestion.ApproveByManager(request.RegNumber);
-
         await _context.SaveChangesAsync(cancellationToken);
+        
         return Unit.Value;
     }
 }

@@ -16,13 +16,21 @@ public class Users : IEndpointGroup
     }
 
     public static async Task<Results<Ok<CurrentUserResponse>, UnauthorizedHttpResult>> GetCurrentUser(
-        System.Security.Claims.ClaimsPrincipal principal,
-        UserManager<ApplicationUser> userManager)
+    System.Security.Claims.ClaimsPrincipal principal,
+    UserManager<ApplicationUser> userManager)
     {
         var user = await userManager.GetUserAsync(principal);
         if (user is null) return TypedResults.Unauthorized();
 
         var roles = await userManager.GetRolesAsync(user);
+
+        // B03.5: Если у пользователя нет ролей (только зарегистрировался), выдаем базовую роль User
+        if (roles.Count == 0)
+        {
+            await userManager.AddToRoleAsync(user, KaizenBoard.Domain.Constants.Roles.User);
+            roles = await userManager.GetRolesAsync(user);
+        }
+
         return TypedResults.Ok(new CurrentUserResponse(
             user.Id, user.Email ?? string.Empty, user.FullName, user.Position,
             user.DepartmentId, roles.ToArray()));

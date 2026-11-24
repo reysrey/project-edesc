@@ -1,6 +1,7 @@
 using KaizenBoard.Application.Common.Exceptions;
 using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Application.Features.Suggestions.Queries.GetSuggestions;
+using KaizenBoard.Domain.Constants;
 using KaizenBoard.Domain.Entities;
 using KaizenBoard.Domain.Enums;
 using MediatR;
@@ -26,7 +27,17 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
 
         if (suggestion is null)
+            throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
+
+        var isMine = suggestion.CreatedBy == _currentUser.Id;
+        var isManager = _currentUser.Roles?.Contains(Roles.AdminL1) == true;
+        var isModerator = _currentUser.Roles?.Contains(Roles.AdminL2) == true;
+
+        // Защита от чтения чужих черновиков по ID (B03.1)
+        if (suggestion.Status == SuggestionStatus.Draft && !isMine)
         {
+            // Модератор своего подразделения тоже может видеть черновики (если нужно), 
+            // но по правилам IdeaHub обычно нет. Оставляем только автора.
             throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
         }
 
@@ -34,41 +45,8 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == suggestion.TargetDepartmentId, cancellationToken);
 
-        var isMine = suggestion.CreatedBy == _currentUser.Id;
-
-        var allowedActions = new List<string>();
-        if (isMine)
-        {
-            allowedActions.Add("edit");
-            if (suggestion.Status == SuggestionStatus.Draft ||
-                suggestion.Status == SuggestionStatus.ReturnedByManager ||
-                suggestion.Status == SuggestionStatus.RevisionRequired)
-            {
-                allowedActions.Add("submit");
-            }
-        }
-
-        if (suggestion.Status == SuggestionStatus.Submitted)
-        {
-            allowedActions.Add("moderate");
-        }
-
-        if (suggestion.Status == SuggestionStatus.InCommission)
-        {
-            allowedActions.Add("commissionApprove");
-            allowedActions.Add("commissionReturn");
-            allowedActions.Add("commissionReject");
-        }
-
-        if (suggestion.Status == SuggestionStatus.ApprovedPlanning)
-        {
-            allowedActions.Add("implementationStart");
-        }
-
-        if (suggestion.Status == SuggestionStatus.InImplementation)
-        {
-            allowedActions.Add("implementationComplete");
-        }
+        var allowedActions = SuggestionVisibility.ComputeActions(
+            suggestion, _currentUser.Id, isManager, isModerator);
 
         return new SuggestionDetailsDto
         {
@@ -77,7 +55,7 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             Status = suggestion.Status,
             Created = suggestion.Created,
             CreatedBy = suggestion.CreatedBy,
-            AuthorName = suggestion.CreatedBy,
+            AuthorName = suggestion.CreatedBy, // TODO(B06): ФИО автора
             IsMine = isMine,
             TargetDepartmentId = suggestion.TargetDepartmentId,
             DepartmentName = department?.Name,
