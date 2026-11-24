@@ -1,8 +1,11 @@
-﻿using KaizenBoard.Domain.Enums; // <-- Добавили
+﻿using KaizenBoard.Application.Common.Security;
+using KaizenBoard.Domain.Constants;
+using KaizenBoard.Domain.Enums;
 using MediatR;
 
 namespace KaizenBoard.Application.Features.Templates.Commands.UpdateTemplate;
 
+[Authorize(Roles = Roles.AdminL1)]
 public class UpdateTemplateCommand : IRequest<Guid>
 {
     public Guid Id { get; init; }
