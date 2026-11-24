@@ -11,8 +11,6 @@ public class WebApiFactory(string connectionString) : WebApplicationFactory<Prog
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Имя строки подключения дублируется литералом, т.к. класс DependencyInjection
-        // определён и в Application, и в Infrastructure (полное имя неоднозначно)
         builder
             .UseSetting("ConnectionStrings:KaizenBoardDb", connectionString);
 
@@ -25,6 +23,7 @@ public class WebApiFactory(string connectionString) : WebApplicationFactory<Prog
                     var mock = new Mock<IUser>();
                     mock.SetupGet(x => x.Roles).Returns(TestApp.GetRoles());
                     mock.SetupGet(x => x.Id).Returns(TestApp.GetUserId());
+                    mock.SetupGet(x => x.DepartmentId).Returns(TestApp.GetDepartmentId()); // ← новое
                     return mock.Object;
                 });
         });
