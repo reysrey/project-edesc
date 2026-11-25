@@ -16,6 +16,7 @@ export const suggestionSchema = z.object({
   title: z.string(),
   status: z.enum(statuses),
   created: z.string(),
+  allowedActions: z.array(z.string()).optional(),
 })
 export const departmentSchema = z.object({
   id: z.string().uuid(),

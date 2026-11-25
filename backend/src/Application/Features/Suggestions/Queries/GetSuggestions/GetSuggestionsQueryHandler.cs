@@ -23,17 +23,19 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
 
     public async Task<List<SuggestionDto>> Handle(GetSuggestionsQuery request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(_user.Id))
+        var userId = _user.Id;
+        if (string.IsNullOrEmpty(userId))
             throw new UnauthorizedAccessException();
 
         var roles = _user.Roles ?? [];
         var isManager = roles.Contains(Roles.AdminL1);
         var isModerator = roles.Contains(Roles.AdminL2);
+        var departmentId = _user.DepartmentId;
 
         // Серверная видимость (B03.1) — до любых остальных фильтров.
         var rows = await _context.Suggestions
             .AsNoTracking()
-            .ApplyVisibility(_user.Id, roles, _user.DepartmentId)
+            .ApplyVisibility(userId, roles, departmentId)
             .OrderByDescending(s => s.Created)
             .Select(s => new
             {
@@ -44,8 +46,8 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
                 s.CreatedBy,
                 s.TargetDepartmentId,
                 s.ImprovementObject,
-                s.CurrentFlaws,
-                s.ProposedSolution,
+                CurrentFlaws = s.CurrentFlaws.Length > 201 ? s.CurrentFlaws.Substring(0, 201) : s.CurrentFlaws,
+                ProposedSolution = s.ProposedSolution.Length > 201 ? s.ProposedSolution.Substring(0, 201) : s.ProposedSolution,
             })
             .ToListAsync(cancellationToken);
 
@@ -77,7 +79,7 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
             ShortDescription = Shorten(s.CurrentFlaws, s.ProposedSolution),
             AllowedActions = SuggestionVisibility.ComputeActions(
                 new Suggestion { Id = s.Id, Status = s.Status, CreatedBy = s.CreatedBy },
-                _user.Id, isManager, isModerator),
+                userId, isManager || (isModerator && departmentId == s.TargetDepartmentId)),
         }).ToList();
     }
 

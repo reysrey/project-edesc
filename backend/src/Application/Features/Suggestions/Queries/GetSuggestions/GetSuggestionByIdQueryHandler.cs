@@ -28,31 +28,29 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
 
     public async Task<SuggestionDetailsDto> Handle(GetSuggestionByIdQuery request, CancellationToken cancellationToken)
     {
+        var userId = _currentUser.Id;
+        if (string.IsNullOrEmpty(userId))
+            throw new UnauthorizedAccessException();
+
+        var roles = _currentUser.Roles;
+        var departmentId = _currentUser.DepartmentId;
         var suggestion = await _context.Suggestions
             .AsNoTracking()
+            .ApplyVisibility(userId, roles, departmentId)
             .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
 
         if (suggestion is null)
             throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
 
-        var isMine = suggestion.CreatedBy == _currentUser.Id;
-        var isManager = _currentUser.Roles?.Contains(Roles.AdminL1) == true;
-        var isModerator = _currentUser.Roles?.Contains(Roles.AdminL2) == true;
-
-        // Защита от чтения чужих черновиков по ID (B03.1)
-        if (suggestion.Status == SuggestionStatus.Draft && !isMine)
-        {
-            // Модератор своего подразделения тоже может видеть черновики (если нужно), 
-            // но по правилам IdeaHub обычно нет. Оставляем только автора.
-            throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
-        }
+        var isMine = suggestion.CreatedBy == userId;
+        var canModerate = roles?.Contains(Roles.AdminL1) == true ||
+            (roles?.Contains(Roles.AdminL2) == true && departmentId == suggestion.TargetDepartmentId);
 
         var department = await _context.Departments
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == suggestion.TargetDepartmentId, cancellationToken);
 
-        var allowedActions = SuggestionVisibility.ComputeActions(
-            suggestion, _currentUser.Id, isManager, isModerator);
+        var allowedActions = SuggestionVisibility.ComputeActions(suggestion, userId, canModerate);
 
         // B01: authorName — ФИО автора, а не его идентификатор.
         // TODO(B06): для анонимной идеи обнулить и authorName, и createdBy.

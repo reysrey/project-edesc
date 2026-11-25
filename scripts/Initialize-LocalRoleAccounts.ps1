@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Stop'
 # This script only provisions development accounts in the repository's local DB.
 # It does not add account management endpoints or alter backend source code.
 $repositoryPath = Split-Path -Parent $PSScriptRoot
-$seedPath = Join-Path $repositoryPath 'src/Infrastructure/Data/ApplicationDbContextInitialiser.cs'
+$seedPath = Join-Path $repositoryPath 'backend/src/Infrastructure/Data/ApplicationDbContextInitialiser.cs'
 if (-not $Password) {
     $seedSource = Get-Content -Raw -LiteralPath $seedPath
     $passwordMatch = [regex]::Match($seedSource, 'CreateAsync\(adminUser, "([^"]+)"')

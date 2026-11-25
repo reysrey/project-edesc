@@ -156,6 +156,7 @@ export function SuggestionForm({
                 <input
                   id="idea-object"
                   required
+                  maxLength={200}
                   placeholder="Процесс, оборудование или рабочее место"
                   {...field('improvementObject')}
                 />
@@ -182,6 +183,7 @@ export function SuggestionForm({
               <textarea
                 id="idea-problem"
                 required
+                maxLength={10_000}
                 placeholder={template?.problemHint || 'Опишите текущую ситуацию'}
                 {...field('currentFlaws')}
               />
@@ -191,6 +193,7 @@ export function SuggestionForm({
               <textarea
                 id="idea-solution"
                 required
+                maxLength={10_000}
                 placeholder={template?.solutionHint || 'Опишите ваше решение'}
                 {...field('proposedSolution')}
               />

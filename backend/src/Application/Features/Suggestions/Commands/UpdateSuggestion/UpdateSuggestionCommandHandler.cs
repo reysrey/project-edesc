@@ -36,15 +36,6 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
             throw new ForbiddenAccessException();
         }
 
-        // B02: конкурентная запись — клиент прислал устаревшую версию.
-        if (string.IsNullOrWhiteSpace(request.Version))
-        {
-            throw new ValidationException(new List<ValidationFailure>
-            {
-                new ValidationFailure("Version", "Версия записи обязательна: получите её из GET /api/Suggestions/{id}.")
-            });
-        }
-
         if (!string.Equals(SuggestionVersion.Compute(suggestion), request.Version, StringComparison.Ordinal))
         {
             throw new InvalidOperationException(
@@ -82,17 +73,6 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
                     new ValidationFailure("TemplateId", "Указанный шаблон не найден или недоступен.")
                 });
             }
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Title) ||
-            string.IsNullOrWhiteSpace(request.CurrentFlaws) ||
-            string.IsNullOrWhiteSpace(request.ProposedSolution) ||
-            string.IsNullOrWhiteSpace(request.ImprovementObject))
-        {
-            throw new ValidationException(new List<ValidationFailure>
-            {
-                new ValidationFailure("Title", "Заполните обязательные поля: заголовок, проблему, решение и объект улучшения.")
-            });
         }
 
         suggestion.Title = request.Title;

@@ -1,8 +1,11 @@
 using KaizenBoard.Infrastructure.Data;
+using KaizenBoard.Web.Infrastructure;
+using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 256 * 1024);
 // Add services to the container.
 builder.AddServiceDefaults();
 
@@ -15,35 +18,40 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 await app.InitialiseDatabaseAsync();
 
-
+// Accept the original HTTPS scheme from the local reverse proxy only.
+app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto });
+if (!app.Environment.IsDevelopment())
+    app.UseHsts();
 app.UseHttpsRedirection();
-
-// CORS для фронтенда: список источников задаётся в конфигурации (appsettings.json / переменные окружения)
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-app.UseCors(policy =>
-{
-    if (allowedOrigins.Length > 0)
-    {
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    }
-    else
-    {
-        // В разработке без настроенного списка — разрешаем всё, чтобы не мешать локальному запуску фронта
-        policy.AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowAnyOrigin();
-    }
-});
-
-app.MapOpenApi();
-app.MapScalarApiReference();
-
 app.UseExceptionHandler(options => { });
 
-app.Map("/", () => Results.Redirect("/scalar"));
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (allowedOrigins.Length > 0)
+{
+    app.UseCors(policy => policy.WithOrigins(allowedOrigins)
+        .AllowAnyHeader().AllowAnyMethod().AllowCredentials());
+}
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Response.Headers.CacheControl = "no-store";
+        if (!BrowserOriginProtection.Allows(context.Request, allowedOrigins))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return;
+        }
+    }
+    await next(context);
+});
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+    app.Map("/", () => Results.Redirect("/scalar"));
+}
 
 app.MapDefaultEndpoints();
 app.MapEndpoints(typeof(Program).Assembly);

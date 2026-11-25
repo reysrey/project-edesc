@@ -1,4 +1,9 @@
 using KaizenBoard.Application.FunctionalTests.Infrastructure;
+using KaizenBoard.Domain.Constants;
+using KaizenBoard.Infrastructure.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 
@@ -29,8 +34,24 @@ public class FunctionalTestSetup
 
         _factory = new WebApiFactory(connectionString);
         ScopeFactory = _factory.Services.GetRequiredService<IServiceScopeFactory>();
+        using (var scope = ScopeFactory.CreateScope())
+        {
+            // Functional tests boot the real production pipeline against a disposable database.
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            (await users.Users.AnyAsync()).ShouldBeFalse();
+            var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            (await roles.RoleExistsAsync(Roles.AdminL1)).ShouldBeTrue();
+            (await roles.RoleExistsAsync(Roles.AdminL2)).ShouldBeTrue();
+            (await roles.RoleExistsAsync(Roles.User)).ShouldBeTrue();
+        }
         DbResetter = await DatabaseResetter.CreateAsync(connectionString);
     }
+
+    internal static HttpClient CreateClient() => _factory!.CreateClient(new WebApplicationFactoryClientOptions
+    {
+        BaseAddress = new Uri("https://localhost"),
+        AllowAutoRedirect = false,
+    });
 
     [OneTimeTearDown]
     public async Task OneTimeTearDown()

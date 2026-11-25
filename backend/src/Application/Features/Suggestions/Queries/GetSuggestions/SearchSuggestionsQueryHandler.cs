@@ -34,11 +34,12 @@ public sealed class SearchSuggestionsQueryHandler
         var roles = _user.Roles ?? [];
         var isManager = roles.Contains(Roles.AdminL1);
         var isModerator = roles.Contains(Roles.AdminL2);
+        var userDepartmentId = _user.DepartmentId;
 
         // 1. Применяем видимость (B03.1) ДО всех фильтров
         var query = _context.Suggestions
             .AsNoTracking()
-            .ApplyVisibility(userId, roles, _user.DepartmentId);
+            .ApplyVisibility(userId, roles, userDepartmentId);
 
         // 2. Применяем scope (сужает, не расширяет)
         query = (request.Scope ?? "board") switch
@@ -46,10 +47,11 @@ public sealed class SearchSuggestionsQueryHandler
             "mine" => query.Where(s => s.CreatedBy == userId),
             "board" => query.Where(s => s.Status != SuggestionStatus.Draft),
             "moderation" when isModerator || isManager => query.Where(s =>
-                s.Status == SuggestionStatus.Submitted ||
-                s.Status == SuggestionStatus.InCommission ||
-                s.Status == SuggestionStatus.ReturnedByManager ||
-                s.Status == SuggestionStatus.RevisionRequired),
+                (isManager || s.TargetDepartmentId == userDepartmentId) &&
+                (s.Status == SuggestionStatus.Submitted ||
+                    s.Status == SuggestionStatus.InCommission ||
+                    s.Status == SuggestionStatus.ReturnedByManager ||
+                    s.Status == SuggestionStatus.RevisionRequired)),
             "all" when isManager => query,
             _ => throw new ForbiddenAccessException(),
         };
@@ -71,10 +73,21 @@ public sealed class SearchSuggestionsQueryHandler
             query = query.Where(s => s.TargetDepartmentId == departmentId);
         if (request.From is { } from)
             query = query.Where(s => s.Created >= from.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
-        if (request.To is { } to)
+        if (request.To is { } to && to < DateOnly.MaxValue)
             query = query.Where(s => s.Created < to.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
 
         var totalCount = await query.CountAsync(cancellationToken);
+        var offset = (long)(pageNumber - 1) * pageSize;
+        if (offset >= totalCount)
+        {
+            return new PagedResult<SuggestionDto>
+            {
+                Items = [],
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+            };
+        }
 
         // 5. Сортировка
         query = request.Sort switch
@@ -94,7 +107,7 @@ public sealed class SearchSuggestionsQueryHandler
 
         // 7. Пагинация и проекция
         var rows = await query
-            .Skip((pageNumber - 1) * pageSize)
+            .Skip((int)offset)
             .Take(pageSize)
             .Select(s => new
             {
@@ -105,8 +118,8 @@ public sealed class SearchSuggestionsQueryHandler
                 s.CreatedBy,
                 s.TargetDepartmentId,
                 s.ImprovementObject,
-                s.CurrentFlaws,
-                s.ProposedSolution,
+                CurrentFlaws = s.CurrentFlaws.Length > 201 ? s.CurrentFlaws.Substring(0, 201) : s.CurrentFlaws,
+                ProposedSolution = s.ProposedSolution.Length > 201 ? s.ProposedSolution.Substring(0, 201) : s.ProposedSolution,
             })
             .ToListAsync(cancellationToken);
 
@@ -124,7 +137,7 @@ public sealed class SearchSuggestionsQueryHandler
             ShortDescription = Shorten(s.CurrentFlaws, s.ProposedSolution),
             AllowedActions = SuggestionVisibility.ComputeActions(
                 new Suggestion { Id = s.Id, Status = s.Status, CreatedBy = s.CreatedBy },
-                userId, isManager, isModerator),
+                userId, isManager || (isModerator && userDepartmentId == s.TargetDepartmentId)),
         }).ToList();
 
         return new PagedResult<SuggestionDto>

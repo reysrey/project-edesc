@@ -42,11 +42,19 @@ public class ProblemDetailsExceptionHandler : IExceptionHandler
                 Title = "Forbidden",
                 Type = "https://tools.ietf.org/html/rfc9110#section-15.5.4"
             }),
-            BadHttpRequestException => (StatusCodes.Status400BadRequest, new ProblemDetails
+            BadHttpRequestException badRequest => (badRequest.StatusCode, new ProblemDetails
             {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Bad Request",
-                Detail = "Не удалось прочитать тело запроса. Проверьте JSON и значения полей."
+                Status = badRequest.StatusCode,
+                Title = "Invalid request",
+                Detail = badRequest.StatusCode == StatusCodes.Status413PayloadTooLarge
+                    ? "Размер запроса превышает допустимый предел."
+                    : "Не удалось прочитать тело запроса. Проверьте JSON и значения полей."
+            }),
+            DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Conflict",
+                Detail = "Запись уже изменена. Откройте её заново и повторите действие."
             }),
             InvalidOperationException => (StatusCodes.Status409Conflict, new ProblemDetails
             {

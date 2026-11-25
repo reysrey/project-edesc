@@ -17,10 +17,10 @@ docker compose up -d
 В отдельном терминале запустите API:
 
 ```powershell
-dotnet run --project src/Web --launch-profile http
+dotnet run --project backend/src/Web --launch-profile http
 ```
 
-API: http://localhost:5000, документация: http://localhost:5000/scalar. При старте сервер применяет миграции и seed. Seed-администратор предназначен только для локальной разработки; параметры смотрите в ApplicationDbContextInitialiser.cs.
+Локальный API доступен на http://localhost:5000, документация в Development — на http://localhost:5000/scalar. При старте сервер применяет миграции и создаёт роли. Тестовые привилегированные аккаунты и тестовое подразделение создаются только в Development.
 
 В другом терминале запустите фронтенд:
 
@@ -37,14 +37,20 @@ npm run dev
 - `frontend/src/app` — приложение, маршруты, layout, тема, стили макета.
 - `frontend/src/features` — сценарии авторизации, предложений, справочников, аналитики.
 - `frontend/src/shared` — типизированный API, runtime-проверка контрактов, общие компоненты и форматирование.
-- `src/Domain` — бизнес-сущности и статусы.
-- `src/Application` — команды и запросы.
-- `src/Infrastructure` — EF Core, PostgreSQL и Identity.
-- `src/Web` — HTTP API.
-- `tests` — тесты бэкенда; `frontend/e2e` — браузерные тесты фронта.
+- `backend/src/Domain` — бизнес-сущности и статусы.
+- `backend/src/Application` — команды и запросы.
+- `backend/src/Infrastructure` — EF Core, PostgreSQL и Identity.
+- `backend/src/Web` — HTTP API.
+- `backend/tests` — тесты бэкенда; `frontend/e2e` — браузерные тесты фронта.
 - `docs/design/ideahub.html` — исходный HTML-макет.
 
 Подробности архитектуры, развёртывания и проверок — в [frontend/README.md](frontend/README.md).
+
+## Настройки безопасности при развёртывании
+
+Передайте строку подключения в `ConnectionStrings__KaizenBoardDb` из хранилища секретов. Держите PostgreSQL в закрытой сети, а фронтенд и `/api` публикуйте под одним HTTPS origin. Локальный обратный прокси должен передавать исходный `Host` и `X-Forwarded-Proto`. Для отдельного прокси настройте доверенные адреса в ASP.NET Core. Если браузер действительно обращается к API с другого origin, добавьте его точное значение в `Cors:AllowedOrigins`.
+
+При обновлении ранее развёрнутой БД проверьте наличие локальных seed-аккаунтов `admin@localhost` и `moderator@localhost`. Если они были созданы старой версией, отзовите их доступ и активные сессии до публикации обновления.
 
 ## Границы текущей интеграции
 
@@ -73,7 +79,7 @@ npm run dev
 | Модератор | `moderator@localhost` | `AdminL2` |
 | Руководитель | `admin@localhost` | `AdminL1` |
 
-В проверенном локальном окружении у всех трёх пароль `Admin123!` из существующего development seed. Эти данные предназначены только для локальной проверки. Для одновременной работы под разными аккаунтами используйте разные профили браузера: обычные вкладки делят cookie-сессию.
+Пароли свежих аккаунтов находятся в `backend/src/Infrastructure/Data/ApplicationDbContextInitialiser.cs`. У руководителя и модератора разные пароли. Скрипт ниже создаёт сотрудника, если его ещё нет. Для одновременной работы под разными аккаунтами используйте разные профили браузера, поскольку обычные вкладки делят cookie-сессию.
 
 Для повторной подготовки локальных сотрудника и модератора:
 

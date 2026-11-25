@@ -13,6 +13,7 @@ async function server(
     moderator?: boolean
     failSubmit?: boolean
     empty?: boolean
+    allowedActions?: string[]
   } = {},
 ) {
   let signedIn = options.signedIn ?? true
@@ -25,6 +26,7 @@ async function server(
           title: 'Единый чек-лист смены',
           status: 'Submitted',
           created: '2026-11-18T12:00:00Z',
+          allowedActions: options.allowedActions,
         },
       ]
   let submitAttempts = 0
@@ -91,6 +93,7 @@ async function server(
           title: body.title,
           status: 'Draft',
           created: '2026-11-23T12:00:00Z',
+          allowedActions: undefined,
         })
         return send(suggestionId, 201)
       }
@@ -203,6 +206,16 @@ test('employee has no management actions or analytics access', async ({ page }) 
   await expect(page.getByLabel('Решение по предложению')).toHaveCount(0)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).not.toBeVisible()
+})
+
+test('moderator has no decision form when the server denies moderation for a suggestion', async ({
+  page,
+}) => {
+  await server(page, { moderator: true, allowedActions: [] })
+  await page.goto('/incoming')
+  await page.getByRole('button', { name: 'Единый чек-лист смены' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Подтвердить решение' })).toHaveCount(0)
 })
 
 test('manager creates a department and a template with real command shapes', async ({ page }) => {

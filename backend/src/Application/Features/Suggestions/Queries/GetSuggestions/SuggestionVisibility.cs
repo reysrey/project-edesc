@@ -12,20 +12,23 @@ public static class SuggestionVisibility
     /// </summary>
     public static IQueryable<Suggestion> ApplyVisibility(
         this IQueryable<Suggestion> source,
-        string? userId,
-        List<string>? roles,
+        string userId,
+        IReadOnlyCollection<string>? roles,
         Guid? userDepartmentId)
     {
         var isManager = roles?.Contains(Roles.AdminL1) == true;
         var isModerator = roles?.Contains(Roles.AdminL2) == true;
 
-        if (isManager) return source;
+        // Черновик виден только автору, включая пользователей с повышенными правами.
+        if (isManager)
+            return source.Where(s => s.CreatedBy == userId || s.Status != SuggestionStatus.Draft);
 
         if (isModerator)
         {
             return source.Where(s =>
-                (userDepartmentId != null && s.TargetDepartmentId == userDepartmentId) ||
-                (s.CreatedBy == userId && s.Status == SuggestionStatus.Draft));
+                s.CreatedBy == userId ||
+                (s.Status != SuggestionStatus.Draft &&
+                    userDepartmentId != null && s.TargetDepartmentId == userDepartmentId));
         }
 
         return source.Where(s =>
@@ -34,7 +37,7 @@ public static class SuggestionVisibility
     }
 
     public static List<string> ComputeActions(
-        Suggestion s, string? userId, bool isManager, bool isModerator)
+        Suggestion s, string userId, bool canModerate)
     {
         var actions = new List<string>();
         var isMine = s.CreatedBy == userId;
@@ -47,7 +50,7 @@ public static class SuggestionVisibility
             actions.Add("submit");
         }
 
-        if (isModerator || isManager)
+        if (canModerate)
         {
             if (s.Status == SuggestionStatus.Submitted) actions.Add("moderate");
             if (s.Status == SuggestionStatus.InCommission)

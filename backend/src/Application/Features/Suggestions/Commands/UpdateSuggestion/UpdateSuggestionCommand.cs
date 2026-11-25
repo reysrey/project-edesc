@@ -2,6 +2,7 @@ using KaizenBoard.Application.Common.Security;
 
 namespace KaizenBoard.Application.Features.Suggestions.Commands.UpdateSuggestion;
 
+[Authorize]
 public class UpdateSuggestionCommand : IRequest<string>
 {
     public Guid Id { get; set; }

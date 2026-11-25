@@ -20,6 +20,7 @@ export function SuggestionDetail({
   const client = useQueryClient()
   const [action, setAction] = useState<'approve' | 'return'>('approve')
   const [value, setValue] = useState('')
+  const canModerate = manager && (suggestion.allowedActions?.includes('moderate') ?? true)
   const mutation = useMutation({
     mutationFn: () =>
       action === 'approve'
@@ -86,7 +87,7 @@ export function SuggestionDetail({
           <p>Описание результата, затраты и экономия пока недоступны.</p>
         </div>
       )}
-      {manager && suggestion.status === 'Submitted' && (
+      {canModerate && suggestion.status === 'Submitted' && (
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -115,6 +116,7 @@ export function SuggestionDetail({
               <textarea
                 id="decision-value"
                 required
+                maxLength={action === 'approve' ? 200 : 10_000}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
               />

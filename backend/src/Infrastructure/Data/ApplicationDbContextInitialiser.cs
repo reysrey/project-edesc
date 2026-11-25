@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace KaizenBoard.Infrastructure.Data;
@@ -18,7 +19,7 @@ public static class InitialiserExtensions
         var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
 
         await initialiser.InitialiseAsync();
-        await initialiser.SeedAsync();
+        await initialiser.SeedAsync(app.Environment.IsDevelopment());
     }
 }
 
@@ -50,11 +51,11 @@ public class ApplicationDbContextInitialiser
         }
     }
 
-    public async Task SeedAsync()
+    public async Task SeedAsync(bool seedDevelopmentData)
     {
         try
         {
-            await TrySeedAsync();
+            await TrySeedAsync(seedDevelopmentData);
         }
         catch (Exception ex)
         {
@@ -63,7 +64,7 @@ public class ApplicationDbContextInitialiser
         }
     }
 
-    public async Task TrySeedAsync()
+    private async Task TrySeedAsync(bool seedDevelopmentData)
     {
         var roles = new[] { Roles.AdminL1, Roles.AdminL2, Roles.User };
 
@@ -79,6 +80,9 @@ public class ApplicationDbContextInitialiser
                 }
             }
         }
+
+        if (!seedDevelopmentData)
+            return;
 
         // --- Главный администратор (AdminL1) ---
         var adminEmail = "admin@localhost";
@@ -102,10 +106,6 @@ public class ApplicationDbContextInitialiser
                     string.Join("; ", createResult.Errors.Select(e => e.Description)));
                 return;
             }
-        }
-
-        if (!await _userManager.IsInRoleAsync(adminUser, Roles.AdminL1))
-        {
             var roleResult = await _userManager.AddToRoleAsync(adminUser, Roles.AdminL1);
             if (!roleResult.Succeeded)
             {
@@ -147,12 +147,15 @@ public class ApplicationDbContextInitialiser
             {
                 _logger.LogError("Не удалось создать модератора: {Errors}",
                     string.Join("; ", createModResult.Errors.Select(e => e.Description)));
+                return;
             }
-        }
 
-        if (modUser != null && !await _userManager.IsInRoleAsync(modUser, Roles.AdminL2))
-        {
-            await _userManager.AddToRoleAsync(modUser, Roles.AdminL2);
+            var roleResult = await _userManager.AddToRoleAsync(modUser, Roles.AdminL2);
+            if (!roleResult.Succeeded)
+            {
+                _logger.LogError("Не удалось назначить роль {Role}: {Errors}", Roles.AdminL2,
+                    string.Join("; ", roleResult.Errors.Select(e => e.Description)));
+            }
         }
     }
 }

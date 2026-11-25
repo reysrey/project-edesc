@@ -1,5 +1,6 @@
 ﻿using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Domain.Common;
+using KaizenBoard.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -42,6 +43,18 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
             if (entry.State is EntityState.Added or EntityState.Modified || entry.HasChangedOwnedEntities())
             {
                 var utcNow = _dateTime.GetUtcNow();
+                if (entry.Entity is Suggestion)
+                {
+                    // PostgreSQL stores microseconds. Each write must advance the concurrency token.
+                    const int ticksPerMicrosecond = 10;
+                    utcNow = utcNow.AddTicks(-(utcNow.Ticks % ticksPerMicrosecond));
+                    if (entry.State == EntityState.Modified)
+                    {
+                        var original = entry.Property(e => e.LastModified).OriginalValue;
+                        if (utcNow <= original)
+                            utcNow = original.AddTicks(ticksPerMicrosecond);
+                    }
+                }
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.CreatedBy = _user.Id;

@@ -5,12 +5,13 @@ using Microsoft.Extensions.Options;
 namespace KaizenBoard.Infrastructure.Identity;
 
 public class ApplicationUserClaimsPrincipalFactory
-    : UserClaimsPrincipalFactory<ApplicationUser>
+    : UserClaimsPrincipalFactory<ApplicationUser, IdentityRole>
 {
     public ApplicationUserClaimsPrincipalFactory(
         UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
         IOptions<IdentityOptions> options)
-        : base(userManager, options) { }
+        : base(userManager, roleManager, options) { }
 
     protected override async Task<ClaimsIdentity> GenerateClaimsAsync(ApplicationUser user)
     {
