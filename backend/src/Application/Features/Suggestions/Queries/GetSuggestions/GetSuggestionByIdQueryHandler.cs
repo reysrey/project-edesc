@@ -1,5 +1,6 @@
 using KaizenBoard.Application.Common.Exceptions;
 using KaizenBoard.Application.Common.Interfaces;
+using KaizenBoard.Application.Common.Models;
 using KaizenBoard.Application.Features.Suggestions.Queries.GetSuggestions;
 using KaizenBoard.Domain.Constants;
 using KaizenBoard.Domain.Entities;
@@ -13,11 +14,16 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _currentUser;
+    private readonly IIdentityService _identityService;
 
-    public GetSuggestionByIdQueryHandler(IApplicationDbContext context, IUser currentUser)
+    public GetSuggestionByIdQueryHandler(
+        IApplicationDbContext context,
+        IUser currentUser,
+        IIdentityService identityService)
     {
         _context = context;
         _currentUser = currentUser;
+        _identityService = identityService;
     }
 
     public async Task<SuggestionDetailsDto> Handle(GetSuggestionByIdQuery request, CancellationToken cancellationToken)
@@ -48,6 +54,12 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
         var allowedActions = SuggestionVisibility.ComputeActions(
             suggestion, _currentUser.Id, isManager, isModerator);
 
+        // B01: authorName — ФИО автора, а не его идентификатор.
+        // TODO(B06): для анонимной идеи обнулить и authorName, и createdBy.
+        var authorName = suggestion.CreatedBy is null
+            ? null
+            : await _identityService.GetUserDisplayNameAsync(suggestion.CreatedBy);
+
         return new SuggestionDetailsDto
         {
             Id = suggestion.Id,
@@ -55,7 +67,7 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             Status = suggestion.Status,
             Created = suggestion.Created,
             CreatedBy = suggestion.CreatedBy,
-            AuthorName = suggestion.CreatedBy, // TODO(B06): ФИО автора
+            AuthorName = authorName,
             IsMine = isMine,
             TargetDepartmentId = suggestion.TargetDepartmentId,
             DepartmentName = department?.Name,
@@ -66,6 +78,8 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             RegistrationNumber = suggestion.RegistrationNumber,
             CommissionNote = suggestion.CommissionNote,
             AllowedActions = allowedActions,
+            // B01: маркер конкурентного изменения
+            Version = SuggestionVersion.Compute(suggestion),
         };
     }
 }

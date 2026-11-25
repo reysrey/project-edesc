@@ -1,19 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using FluentValidation.Results;
 using KaizenBoard.Application.Common.Exceptions;
 using KaizenBoard.Application.Common.Interfaces;
+using KaizenBoard.Application.Common.Models;
 using KaizenBoard.Domain.Entities;
 using KaizenBoard.Domain.Enums;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 using ValidationException = KaizenBoard.Application.Common.Exceptions.ValidationException;
 
 namespace KaizenBoard.Application.Features.Suggestions.Commands.UpdateSuggestion;
 
-public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCommand, Unit>
+public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCommand, string>
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _currentUser;
@@ -24,7 +20,7 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
         _currentUser = currentUser;
     }
 
-    public async Task<Unit> Handle(UpdateSuggestionCommand request, CancellationToken cancellationToken)
+    public async Task<string> Handle(UpdateSuggestionCommand request, CancellationToken cancellationToken)
     {
         var suggestion = await _context.Suggestions
             .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
@@ -38,6 +34,21 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
         if (!isMine)
         {
             throw new ForbiddenAccessException();
+        }
+
+        // B02: конкурентная запись — клиент прислал устаревшую версию.
+        if (string.IsNullOrWhiteSpace(request.Version))
+        {
+            throw new ValidationException(new List<ValidationFailure>
+            {
+                new ValidationFailure("Version", "Версия записи обязательна: получите её из GET /api/Suggestions/{id}.")
+            });
+        }
+
+        if (!string.Equals(SuggestionVersion.Compute(suggestion), request.Version, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "Запись уже изменена. Откройте её заново и повторите правку.");
         }
 
         if (suggestion.Status != SuggestionStatus.Draft &&
@@ -54,8 +65,23 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
         {
             throw new ValidationException(new List<ValidationFailure>
             {
-                new ValidationFailure("TargetDepartmentId", "Неизвестный подразделение.")
+                new ValidationFailure("TargetDepartmentId", "Указанное подразделение не найдено.")
             });
+        }
+
+        // B02: привязанный шаблон должен существовать и быть активным.
+        if (request.TemplateId is { } templateId)
+        {
+            var templateAvailable = await _context.Templates
+                .AnyAsync(t => t.Id == templateId && t.IsActive, cancellationToken);
+
+            if (!templateAvailable)
+            {
+                throw new ValidationException(new List<ValidationFailure>
+                {
+                    new ValidationFailure("TemplateId", "Указанный шаблон не найден или недоступен.")
+                });
+            }
         }
 
         if (string.IsNullOrWhiteSpace(request.Title) ||
@@ -74,9 +100,13 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
         suggestion.ProposedSolution = request.ProposedSolution;
         suggestion.ImprovementObject = request.ImprovementObject;
         suggestion.TargetDepartmentId = request.TargetDepartmentId;
+        suggestion.TemplateId = request.TemplateId;
+
+        // B02: обычное сохранение не переводит статус в Submitted — это делает /submit.
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Unit.Value;
+        // B02: возвращаем актуальную версию уже после фиксации LastModified.
+        return SuggestionVersion.Compute(suggestion);
     }
 }

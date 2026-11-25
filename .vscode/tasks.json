@@ -1,0 +1,31 @@
+{
+  // Задачи для запуска в один клик: Terminal → Run Task... (Ctrl+Shift+B = «dev: всё сразу»)
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev: backend (http)",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["run", "--project", "backend/src/Web", "--launch-profile", "http"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "dev: frontend (vite)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "dev: всё сразу",
+      "dependsOrder": "parallel",
+      "dependsOn": ["dev: backend (http)", "dev: frontend (vite)"],
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}

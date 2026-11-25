@@ -6,6 +6,9 @@ public interface IIdentityService
 {
     Task<string?> GetUserNameAsync(string userId);
 
+    /// <summary>B01: человекочитаемое имя автора для карточки и списка.</summary>
+    Task<string?> GetUserDisplayNameAsync(string userId);
+
     Task<bool> IsInRoleAsync(string userId, string role);
 
     Task<bool> AuthorizeAsync(string userId, string policyName);

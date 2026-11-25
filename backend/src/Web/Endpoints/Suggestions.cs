@@ -78,11 +78,12 @@ public class Suggestions : IEndpointGroup
         return TypedResults.Ok(dto);
     }
 
-    public static async Task<NoContent> UpdateSuggestion(ISender sender, Guid id, UpdateSuggestionCommand command)
+    public static async Task<Ok<object>> UpdateSuggestion(ISender sender, Guid id, UpdateSuggestionCommand command)
     {
         command.Id = id;
-        await sender.Send(command);
-        return TypedResults.NoContent();
+        var version = await sender.Send(command);
+        // B02: клиенту нужна актуальная версия для следующего PUT.
+        return TypedResults.Ok<object>(new { version });
     }
 
     public static async Task<NoContent> SubmitSuggestion(ISender sender, Guid id)

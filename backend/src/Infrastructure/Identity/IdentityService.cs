@@ -29,6 +29,19 @@ public class IdentityService : IIdentityService
         return user?.UserName;
     }
 
+    public async Task<string?> GetUserDisplayNameAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user is null)
+        {
+            return null;
+        }
+
+        // FullName заполняется в seed; при обычной регистрации остаётся пустым.
+        return string.IsNullOrWhiteSpace(user.FullName) ? user.UserName : user.FullName;
+    }
+
     public async Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password)
     {
         var user = new ApplicationUser

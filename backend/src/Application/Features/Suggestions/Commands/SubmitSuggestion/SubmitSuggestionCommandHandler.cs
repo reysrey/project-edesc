@@ -34,6 +34,17 @@ public class SubmitSuggestionCommandHandler : IRequestHandler<SubmitSuggestionCo
         if (!departmentExists)
             throw new KaizenBoard.Application.Common.Exceptions.ValidationException(new[] { new ValidationFailure("TargetDepartmentId", "Подразделение не существует") });
 
+        // B02: шаблон заявки должен существовать и быть активным на момент отправки.
+        if (suggestion.TemplateId is { } templateId)
+        {
+            var templateAvailable = await _context.Templates
+                .AnyAsync(t => t.Id == templateId && t.IsActive, cancellationToken);
+
+            if (!templateAvailable)
+                throw new KaizenBoard.Application.Common.Exceptions.ValidationException(
+                    new[] { new ValidationFailure("TemplateId", "Привязанный шаблон не найден или недоступен") });
+        }
+
         suggestion.Submit();
         await _context.SaveChangesAsync(cancellationToken);
 

@@ -14,4 +14,7 @@ public class CreateSuggestionCommand: IRequest<Guid>
     public string ProposedSolution { get; init; } = string.Empty;
     public string ImprovementObject { get; init; } = string.Empty;
     public Guid TargetDepartmentId { get; init; }
+
+    // B02: шаблон, по которому создана заявка (необязательно).
+    public Guid? TemplateId { get; init; }
 }
