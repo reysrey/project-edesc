@@ -4,7 +4,7 @@
 
 Повторная сверка: код ветки `feature/ideahub-frontend` на `94df282`, действующий OpenAPI `http://localhost:5000/openapi/v1.json` и актуальный после `git fetch` `origin/main` (`8c7baff`). Найденные пробелы прав ниже установлены по обработчикам и атрибутам, без изменения чужих записей для демонстрации обхода. Ранее выполненные живые проверки подтверждают обычные сценарии входа/подачи/модерации, а не отсутствие всех ошибок доступа.
 
-**Ниже описаны предлагаемые новые контракты, а не уже существующие endpoint-ы.** Фронт сейчас вызывает только существующий API и `/api/Users/me`. Новые маршруты необходимо реализовать и согласованно подключить. Заглушки интерфейса не сохраняют данные.
+Разделы B01 и B02 фиксируют реализованный контракт MVP-01 для подключения фронтенда. Остальные разделы описывают задачи и предложения для следующих этапов.
 
 ## 1. Роли и текущие возможности
 
@@ -34,9 +34,9 @@
 
 | Существующий контракт | Проверенное содержимое / ограничение |
 | --- | --- |
-| GET `/api/Suggestions` | Массив `{id,title,status,created}`; нет подробностей, автора и подразделения |
-| POST `/api/Suggestions` | `{title,currentFlaws,proposedSolution,improvementObject,targetDepartmentId}` → GUID черновика, HTTP 201 |
-| POST `/api/Suggestions/{id}/submit` | Отдельная отправка черновика, HTTP 204 |
+| GET `/api/Suggestions` | Массив элементов списка из B01 |
+| POST `/api/Suggestions` | Сохранение черновика с поддержкой `Idempotency-Key`, HTTP 201 с GUID |
+| POST `/api/Suggestions/{id}/submit` | Подача черновика или повторная подача после возврата модератором, HTTP 204 |
 | POST `/api/Suggestions/{id}/approve` | `{regNumber}` → InCommission, HTTP 204 |
 | POST `/api/Suggestions/{id}/return` | `{reason}` → ReturnedByManager, HTTP 204 |
 | GET/POST `/api/Departments`, PUT/DELETE `/{id}` | Справочник уже реализован; доработать права и валидацию назначения модератора |
@@ -53,31 +53,41 @@
 
 ### GET `/api/Suggestions/{id}`
 
-Авторизация обязательна. Минимальный ответ:
+Все операции MVP-01 требуют авторизации. Карточка возвращает `200 OK` с объектом следующей формы.
 
 ```typescript
-{
+type SuggestionStatus =
+  | 'Draft' | 'Submitted' | 'ReturnedByManager' | 'InCommission'
+  | 'RevisionRequired' | 'Rejected' | 'ApprovedPlanning'
+  | 'InImplementation' | 'Implemented';
+
+type SuggestionAction = 'edit' | 'submit' | 'moderate';
+
+type SuggestionDetails = {
   id: string; title: string; status: SuggestionStatus; created: string;
   createdBy: string | null; authorName: string | null; isMine: boolean;
-  targetDepartmentId: string; departmentName: string;
+  targetDepartmentId: string; departmentName: string | null;
   improvementObject: string; currentFlaws: string; proposedSolution: string;
-  templateId: string | null;
+  templateId: string | null; templateName: string | null; templateIsActive: boolean | null;
   registrationNumber: string | null; commissionNote: string | null;
-  allowedActions: string[]; // например: edit, submit, moderate, commissionApprove
-  version: string; // непрозрачный маркер конкурентного изменения
-}
+  allowedActions: SuggestionAction[]; version: string; submissionCount: number;
+};
 ```
 
-Добавить в текущий список как минимум `createdBy`, `authorName`, `targetDepartmentId`, `departmentName`, `improvementObject`, краткое описание и `allowedActions`. Полные тексты могут оставаться только в карточке.
+Чужой черновик и любая другая невидимая запись возвращают `404`. Поле `commissionNote` доступно автору, руководителю `AdminL1` и модератору `AdminL2` целевого подразделения в видимых им карточках. Остальные читатели получают `null`. `templateName` и `templateIsActive` берутся из справочника, включая архивные шаблоны. Если привязки или записи в справочнике нет, оба поля равны `null`.
 
-Для анонимной идеи обычному зрителю не выдавать реальный createdBy и автора: использовать публичный DTO/nullable поля. Для личной выборки авторство проверять на сервере по текущей сессии, а не по присланному userId. Сотрудник видит свои черновики и доступную публичную доску, модератор — разрешённые записи подразделения, руководитель — разрешённые записи предприятия.
+| `allowedActions` | Кому и когда доступно | Вызов |
+| --- | --- | --- |
+| `edit` | Автору в `Draft`, `ReturnedByManager`, `RevisionRequired` | `PUT /api/Suggestions/{id}` |
+| `submit` | Автору в `Draft` и `ReturnedByManager` | `POST /api/Suggestions/{id}/submit` |
+| `moderate` | Руководителю или модератору целевого подразделения в `Submitted` | `POST /api/Suggestions/{id}/approve` с `{regNumber}` или `/return` с `{reason}` |
 
-### GET `/api/Suggestions/search`
+### GET `/api/Suggestions/search?scope=mine`
 
-Предлагаемый отдельный маршрут, чтобы не ломать нынешний GET `/api/Suggestions/`, который возвращает массив:
+Возвращает `200 OK` со страницей записей текущего пользователя, включая его черновики. Остальные параметры запроса опциональны.
 
 ```text
-?scope=mine|board|moderation|all
+?scope=mine
 &search=...
 &status=Submitted
 &departmentId=<guid>
@@ -86,32 +96,52 @@
 &pageNumber=1&pageSize=20
 ```
 
-Ответ: `{items: SuggestionListDto[], totalCount: number, pageNumber: number, pageSize: number}`. Ограничить pageSize. Не допускать обхода видимости через поиск, ID, totalCount или параметры scope. Альтернатива — версионировать текущий GET, но менять форму ответа нужно одновременно с клиентом.
+```typescript
+type SuggestionListItem = {
+  id: string; title: string; status: SuggestionStatus; created: string;
+  createdBy: string | null; authorName: string | null;
+  targetDepartmentId: string; departmentName: string | null;
+  improvementObject: string; shortDescription: string;
+  allowedActions: SuggestionAction[];
+};
 
-**Приёмка:** сотрудник видит свои записи после входа с другого браузера; чужие черновики недоступны и напрямую по ID; карточка показывает реальные проблему, решение и комментарий.
+type SuggestionSearchResult = {
+  items: SuggestionListItem[]; totalCount: number; pageNumber: number; pageSize: number;
+};
+```
+
+Поиск проверяет название, проблему и решение. `from` и `to` включают указанный день по UTC. По умолчанию сортировка `createdDesc`, первая страница и 20 записей. Максимальный размер страницы — 100. `totalCount` учитывает видимость, владельца и фильтры. `GET /api/Suggestions` возвращает массив `SuggestionListItem[]`.
 
 ## B02 — P0: черновики и повторная подача
 
-Добавить PUT `/api/Suggestions/{id}` с телом:
+### POST `/api/Suggestions/` и PUT `/api/Suggestions/{id}`
+
+Создание принимает `SuggestionInput`. Для сохранения существующей записи дополнительно передаётся `version` из карточки или из последнего ответа PUT.
 
 ```typescript
-{
+type SuggestionInput = {
   title: string; currentFlaws: string; proposedSolution: string;
   improvementObject: string; targetDepartmentId: string;
   templateId?: string | null;
-  version: string;
-}
+};
+
+type UpdateSuggestionInput = SuggestionInput & { version: string };
+type UpdateSuggestionResponse = { version: string };
 ```
 
-- Разрешить изменение владельцу только в `Draft`, `ReturnedByManager`, `RevisionRequired` по согласованным правилам.
-- Возвращать актуальную версию записи; не менять статус на Submitted при обычном сохранении.
-- Существующий POST `/{id}/submit` обязан проверять владельца, доступ к подразделению, допустимость состояния и полноту данных.
-- Сейчас доменный Submit разрешает только Draft и ReturnedByManager. Для RevisionRequired определить и реализовать отдельный путь возврата в комиссию/повторного рассмотрения.
-- Проверять существование подразделения и доступность выбранного шаблона. Сохранять TemplateId; текущая команда его не принимает.
-- В текущем CreateSuggestion validator проверяет только заголовок, проблему и решение. Добавить правила для объекта улучшения и TargetDepartmentId; неизвестное подразделение должно давать понятную ошибку поля, а не общий конфликт БД.
-- Добавить idempotency-key для создания/подачи либо эквивалентную защиту от дублей при потере ответа.
+Для создания отправляйте один необязательный заголовок `Idempotency-Key` на попытку, например UUID. Допустимая длина от 1 до 128 символов. Допустимы латинские буквы, цифры и `._~-`. При повторе с тем же ключом и теми же значениями полей тот же пользователь получает `201 Created`, тот же GUID в виде JSON-строки и тот же `Location`. Порядок полей в JSON не влияет на сравнение. Повтор работает и после редактирования исходного черновика или архивации его шаблона. Если значения отличаются, сервер отвечает `409`. Ключи разных пользователей независимы.
 
-**Приёмка:** черновик можно открыть, изменить и отправить после перезагрузки или на другом устройстве; после возврата видна причина и доступна повторная подача; повтор запроса не создаёт вторую идею.
+PUT сохраняет поля и возвращает `200 OK` с актуальной версией, сохраняя текущий статус. Повторите `templateId` из карточки, чтобы оставить существующую привязку. Для отвязки передайте `null` или опустите поле. Новая привязка при POST или PUT требует активный шаблон. Существующая привязка к архивному шаблону сохраняется при редактировании и подаче.
+
+Название и объект обязательны, до 200 символов. Проблема и решение обязательны, до 10 000 символов. Подразделение должно существовать. Ошибки полей возвращают `400` с объектом `errors`. Для PUT `version` — непрозрачная строка из 64 символов. Устаревшая версия, конкурентная запись или недопустимый статус дают `409`.
+
+### POST `/api/Suggestions/{id}/submit`
+
+Вызов без тела. Автор подаёт `Draft` или `ReturnedByManager` и получает `204 No Content`. Переход в `Submitted` увеличивает `submissionCount` на единицу. Подача из `RevisionRequired` подключается в MVP-03.
+
+Перед отправкой сохраните `submissionCount` из карточки. Если ответ потерялся, снова прочитайте карточку. Рост счётчика подтверждает, что подача произошла, даже если модератор уже успел вернуть ту же запись. Если счётчик прежний, повторить вызов можно при наличии `submit` в актуальном `allowedActions`. Счётчик учитывает подачи с момента применения миграции MVP-01. Для старых записей начальное значение равно нулю.
+
+Для PUT и submit чужой черновик и отсутствующий ID дают `404`, а чужая запись в другом статусе — `403`. Недопустимый или конкурентный переход при submit даёт `409`. Без авторизации сервер отвечает `401`.
 
 ## B03 — P0: защита действий и пользователей
 
