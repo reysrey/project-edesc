@@ -17,9 +17,12 @@ public class SuggestionDetailsDto
     public string CurrentFlaws { get; set; } = string.Empty;
     public string ProposedSolution { get; set; } = string.Empty;
     public Guid? TemplateId { get; set; }
+    public string? TemplateName { get; set; }
+    public bool? TemplateIsActive { get; set; }
     public string? RegistrationNumber { get; set; }
     public string? CommissionNote { get; set; }
     public List<string> AllowedActions { get; set; } = [];
+    public int SubmissionCount { get; set; }
 
     // B01: непрозрачный маркер конкурентного изменения.
     // Клиент возвращает его в PUT, при устаревании сервер отвечает 409.

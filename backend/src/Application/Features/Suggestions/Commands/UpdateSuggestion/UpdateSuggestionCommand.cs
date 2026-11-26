@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using KaizenBoard.Application.Common.Security;
 
 namespace KaizenBoard.Application.Features.Suggestions.Commands.UpdateSuggestion;
@@ -5,6 +6,7 @@ namespace KaizenBoard.Application.Features.Suggestions.Commands.UpdateSuggestion
 [Authorize]
 public class UpdateSuggestionCommand : IRequest<string>
 {
+    [JsonIgnore]
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string CurrentFlaws { get; set; } = string.Empty;

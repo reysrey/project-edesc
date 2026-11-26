@@ -3,7 +3,6 @@ using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using FluentValidation.Results;
 
 namespace KaizenBoard.Application.Features.Suggestions.Commands.SubmitSuggestion;
 
@@ -20,7 +19,9 @@ public class SubmitSuggestionCommandHandler : IRequestHandler<SubmitSuggestionCo
 
     public async Task<Unit> Handle(SubmitSuggestionCommand request, CancellationToken cancellationToken)
     {
-        var suggestion = await _context.Suggestions.FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+        var suggestion = await _context.Suggestions
+            .ExcludeForeignDrafts(_user.Id)
+            .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
 
         if (suggestion == null) 
             throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
@@ -28,22 +29,6 @@ public class SubmitSuggestionCommandHandler : IRequestHandler<SubmitSuggestionCo
         // Проверка владельца (B03.2)
         if (suggestion.CreatedBy != _user.Id)
             throw new ForbiddenAccessException();
-
-        // Проверка существования подразделения
-        var departmentExists = await _context.Departments.AnyAsync(d => d.Id == suggestion.TargetDepartmentId, cancellationToken);
-        if (!departmentExists)
-            throw new KaizenBoard.Application.Common.Exceptions.ValidationException(new[] { new ValidationFailure("TargetDepartmentId", "Подразделение не существует") });
-
-        // B02: шаблон заявки должен существовать и быть активным на момент отправки.
-        if (suggestion.TemplateId is { } templateId)
-        {
-            var templateAvailable = await _context.Templates
-                .AnyAsync(t => t.Id == templateId && t.IsActive, cancellationToken);
-
-            if (!templateAvailable)
-                throw new KaizenBoard.Application.Common.Exceptions.ValidationException(
-                    new[] { new ValidationFailure("TemplateId", "Привязанный шаблон не найден или недоступен") });
-        }
 
         suggestion.Submit();
         await _context.SaveChangesAsync(cancellationToken);

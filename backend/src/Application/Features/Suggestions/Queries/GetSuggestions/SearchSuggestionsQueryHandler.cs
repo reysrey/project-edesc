@@ -3,7 +3,6 @@ using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Application.Common.Models;
 using KaizenBoard.Domain.Constants;
 using KaizenBoard.Domain.Enums;
-using KaizenBoard.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,11 +13,13 @@ public sealed class SearchSuggestionsQueryHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
+    private readonly IIdentityService _identityService;
 
-    public SearchSuggestionsQueryHandler(IApplicationDbContext context, IUser user)
+    public SearchSuggestionsQueryHandler(IApplicationDbContext context, IUser user, IIdentityService identityService)
     {
         _context = context;
         _user = user;
+        _identityService = identityService;
     }
 
     public async Task<PagedResult<SuggestionDto>> Handle(
@@ -123,6 +124,9 @@ public sealed class SearchSuggestionsQueryHandler
             })
             .ToListAsync(cancellationToken);
 
+        var isMineScope = request.Scope == "mine";
+        var authorName = isMineScope ? await _identityService.GetUserDisplayNameAsync(userId) : null;
+
         var items = rows.Select(s => new SuggestionDto
         {
             Id = s.Id,
@@ -130,14 +134,14 @@ public sealed class SearchSuggestionsQueryHandler
             Status = s.Status,
             Created = s.Created,
             CreatedBy = s.CreatedBy,
-            AuthorName = s.CreatedBy, // TODO(B06): когда появится IsAnonymous
+            AuthorName = isMineScope ? authorName : s.CreatedBy,
             TargetDepartmentId = s.TargetDepartmentId,
             DepartmentName = departments.GetValueOrDefault(s.TargetDepartmentId),
             ImprovementObject = s.ImprovementObject,
             ShortDescription = Shorten(s.CurrentFlaws, s.ProposedSolution),
             AllowedActions = SuggestionVisibility.ComputeActions(
-                new Suggestion { Id = s.Id, Status = s.Status, CreatedBy = s.CreatedBy },
-                userId, isManager || (isModerator && userDepartmentId == s.TargetDepartmentId)),
+                s.Status, s.CreatedBy == userId,
+                SuggestionVisibility.CanModerate(roles, userDepartmentId, s.TargetDepartmentId)),
         }).ToList();
 
         return new PagedResult<SuggestionDto>

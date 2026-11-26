@@ -18,22 +18,31 @@ public class Suggestions : IEndpointGroup
     public static void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.RequireAuthorization();
-        groupBuilder.MapPost(CreateSuggestion, "/");
+        groupBuilder.MapPost(CreateSuggestion, "/")
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
         groupBuilder.MapGet(GetSuggestions, "/");
 
         // ВАЖНО: search регистрируется ДО {id}
         groupBuilder.MapGet(SearchSuggestions, "search");
-        groupBuilder.MapGet(GetSuggestionById, "{id}");
+        groupBuilder.MapGet(GetSuggestionById, "{id}")
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
-        groupBuilder.MapPut(UpdateSuggestion, "{id}");
-        groupBuilder.MapPost(SubmitSuggestion, "{id}/submit");
+        groupBuilder.MapPut(UpdateSuggestion, "{id}")
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
+        groupBuilder.MapPost(SubmitSuggestion, "{id}/submit")
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
         groupBuilder.MapPost(ApproveByManager, "{id}/approve");
         groupBuilder.MapPost(ReturnByManager, "{id}/return");
     }
 
-    public static async Task<Created<Guid>> CreateSuggestion(ISender sender, CreateSuggestionCommand command)
+    public static async Task<Created<Guid>> CreateSuggestion(
+        ISender sender,
+        CreateSuggestionInput input,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey)
     {
-        var id = await sender.Send(command);
+        var id = await sender.Send(new CreateSuggestionCommand(input, idempotencyKey));
         return TypedResults.Created($"/api/suggestions/{id}", id);
     }
 
@@ -78,12 +87,12 @@ public class Suggestions : IEndpointGroup
         return TypedResults.Ok(dto);
     }
 
-    public static async Task<Ok<object>> UpdateSuggestion(ISender sender, Guid id, UpdateSuggestionCommand command)
+    public static async Task<Ok<UpdateSuggestionResponse>> UpdateSuggestion(
+        ISender sender, Guid id, UpdateSuggestionCommand command)
     {
         command.Id = id;
         var version = await sender.Send(command);
-        // B02: клиенту нужна актуальная версия для следующего PUT.
-        return TypedResults.Ok<object>(new { version });
+        return TypedResults.Ok(new UpdateSuggestionResponse(version));
     }
 
     public static async Task<NoContent> SubmitSuggestion(ISender sender, Guid id)
@@ -106,3 +115,5 @@ public class Suggestions : IEndpointGroup
         return TypedResults.NoContent();
     }
 }
+
+public record UpdateSuggestionResponse(string Version);

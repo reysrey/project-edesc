@@ -16,6 +16,10 @@ public void Configure(EntityTypeBuilder<Suggestion> builder)
         builder.Property(t => t.RegistrationNumber).HasMaxLength(200);
         builder.Property(t => t.LastModified).IsConcurrencyToken();
         builder.HasIndex(s => s.RegistrationNumber).IsUnique();
+        builder.Property(s => s.CreationKey).HasMaxLength(128);
+        builder.Property(s => s.CreationPayloadHash).HasMaxLength(64);
+        builder.HasIndex(s => new { s.CreatedBy, s.CreationKey }).IsUnique()
+            .HasFilter("\"CreationKey\" IS NOT NULL");
 
         builder.Property(t => t.EconomicEffectAmount).HasPrecision(18, 2);
         builder.Property(t => t.ImplementationCost).HasPrecision(18, 2);

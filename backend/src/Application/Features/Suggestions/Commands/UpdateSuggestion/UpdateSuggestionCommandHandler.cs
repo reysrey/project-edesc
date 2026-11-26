@@ -3,7 +3,6 @@ using KaizenBoard.Application.Common.Exceptions;
 using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Application.Common.Models;
 using KaizenBoard.Domain.Entities;
-using KaizenBoard.Domain.Enums;
 
 using ValidationException = KaizenBoard.Application.Common.Exceptions.ValidationException;
 
@@ -23,6 +22,7 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
     public async Task<string> Handle(UpdateSuggestionCommand request, CancellationToken cancellationToken)
     {
         var suggestion = await _context.Suggestions
+            .ExcludeForeignDrafts(_currentUser.Id)
             .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
 
         if (suggestion is null)
@@ -42,9 +42,7 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
                 "Запись уже изменена. Откройте её заново и повторите правку.");
         }
 
-        if (suggestion.Status != SuggestionStatus.Draft &&
-            suggestion.Status != SuggestionStatus.ReturnedByManager &&
-            suggestion.Status != SuggestionStatus.RevisionRequired)
+        if (!Suggestion.CanEdit(suggestion.Status))
         {
             throw new InvalidOperationException("Редактировать можно только черновик или предложение после возврата на доработку.");
         }
@@ -60,8 +58,8 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
             });
         }
 
-        // B02: привязанный шаблон должен существовать и быть активным.
-        if (request.TemplateId is { } templateId)
+        // Архивный шаблон можно сохранить в существующей привязке.
+        if (request.TemplateId is { } templateId && templateId != suggestion.TemplateId)
         {
             var templateAvailable = await _context.Templates
                 .AnyAsync(t => t.Id == templateId && t.IsActive, cancellationToken);

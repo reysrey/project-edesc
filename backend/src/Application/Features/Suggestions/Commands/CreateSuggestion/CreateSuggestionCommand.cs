@@ -7,7 +7,9 @@ using MediatR;
 namespace KaizenBoard.Application.Features.Suggestions.Commands.CreateSuggestion;
 
 [Authorize]
-public class CreateSuggestionCommand: IRequest<Guid>
+public record CreateSuggestionCommand(CreateSuggestionInput Input, string? IdempotencyKey = null) : IRequest<Guid>;
+
+public record CreateSuggestionInput
 {
     public string Title { get; init; } = string.Empty;
     public string CurrentFlaws { get; init; } = string.Empty;
@@ -15,6 +17,5 @@ public class CreateSuggestionCommand: IRequest<Guid>
     public string ImprovementObject { get; init; } = string.Empty;
     public Guid TargetDepartmentId { get; init; }
 
-    // B02: шаблон, по которому создана заявка (необязательно).
     public Guid? TemplateId { get; init; }
 }

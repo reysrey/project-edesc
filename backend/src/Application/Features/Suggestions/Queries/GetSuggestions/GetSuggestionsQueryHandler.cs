@@ -1,6 +1,4 @@
 using KaizenBoard.Application.Common.Interfaces;
-using KaizenBoard.Domain.Constants;
-using KaizenBoard.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace KaizenBoard.Application.Features.Suggestions.Queries.GetSuggestions;
@@ -28,8 +26,6 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
             throw new UnauthorizedAccessException();
 
         var roles = _user.Roles ?? [];
-        var isManager = roles.Contains(Roles.AdminL1);
-        var isModerator = roles.Contains(Roles.AdminL2);
         var departmentId = _user.DepartmentId;
 
         // Серверная видимость (B03.1) — до любых остальных фильтров.
@@ -78,8 +74,8 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
             ImprovementObject = s.ImprovementObject,
             ShortDescription = Shorten(s.CurrentFlaws, s.ProposedSolution),
             AllowedActions = SuggestionVisibility.ComputeActions(
-                new Suggestion { Id = s.Id, Status = s.Status, CreatedBy = s.CreatedBy },
-                userId, isManager || (isModerator && departmentId == s.TargetDepartmentId)),
+                s.Status, s.CreatedBy == userId,
+                SuggestionVisibility.CanModerate(roles, departmentId, s.TargetDepartmentId)),
         }).ToList();
     }
 

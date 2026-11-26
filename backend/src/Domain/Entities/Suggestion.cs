@@ -10,6 +10,8 @@ public class Suggestion: BaseAuditableEntity
 {
     public string? RegistrationNumber { get; set; }
     public Guid? TemplateId { get; set; }
+    public string? CreationKey { get; init; }
+    public string? CreationPayloadHash { get; init; }
     public Guid TargetDepartmentId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string ImprovementObject { get; set; } = string.Empty;
@@ -18,6 +20,7 @@ public class Suggestion: BaseAuditableEntity
     public string ExpectedResultBefore  { get; set; } = string.Empty;
     public string ExpectedResultAfter  { get; set; } = string.Empty;
     public SuggestionStatus Status { get; set; } = SuggestionStatus.Draft;
+    public int SubmissionCount { get; private set; }
     public DateTime? StatusDeadlineAt { get; set; }
     public string? CommissionNote { get; set; } = string.Empty;
     public Guid? HelperDepartmentId { get; set; }
@@ -28,17 +31,27 @@ public class Suggestion: BaseAuditableEntity
     public decimal? EconomicEffectAmount { get; set; }
     public decimal? RewardAmount { get; set; }
 
+    public static bool CanEdit(SuggestionStatus status) =>
+        CanSubmit(status) || status == SuggestionStatus.RevisionRequired;
+
+    public static bool CanSubmit(SuggestionStatus status) =>
+        status is SuggestionStatus.Draft or SuggestionStatus.ReturnedByManager;
+
+    public static bool CanBeModerated(SuggestionStatus status) =>
+        status == SuggestionStatus.Submitted;
+
     public void Submit()
     {
-        if (Status != SuggestionStatus.Draft && Status != SuggestionStatus.ReturnedByManager)
+        if (!CanSubmit(Status))
             throw new InvalidOperationException("Отправить можно только черновик или предложение после доработки");
 
         Status = SuggestionStatus.Submitted;
         StatusDeadlineAt = DateTime.UtcNow.AddDays(1);
+        SubmissionCount++;
     }
     public void ApproveByManager(string regNumber)
     {
-        if (Status != SuggestionStatus.Submitted)
+        if (!CanBeModerated(Status))
             throw new InvalidOperationException("Одобрить можно только заявку, которая находится на проверке у руководителя.");
         if (string.IsNullOrWhiteSpace(regNumber))
             throw new ArgumentException("Регистрационный номер не может быть пустым.", nameof(regNumber));
@@ -52,7 +65,7 @@ public class Suggestion: BaseAuditableEntity
 
     public void ReturnByManager(string reason)
     {
-        if (Status != SuggestionStatus.Submitted)
+        if (!CanBeModerated(Status))
             throw new InvalidOperationException("Вернуть на доработку можно только заявку на проверке.");
 
         if (string.IsNullOrWhiteSpace(reason))

@@ -1,10 +1,7 @@
 using KaizenBoard.Application.Common.Exceptions;
 using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Application.Common.Models;
-using KaizenBoard.Application.Features.Suggestions.Queries.GetSuggestions;
-using KaizenBoard.Domain.Constants;
 using KaizenBoard.Domain.Entities;
-using KaizenBoard.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,14 +40,18 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
 
         var isMine = suggestion.CreatedBy == userId;
-        var canModerate = roles?.Contains(Roles.AdminL1) == true ||
-            (roles?.Contains(Roles.AdminL2) == true && departmentId == suggestion.TargetDepartmentId);
+        var canModerate = SuggestionVisibility.CanModerate(roles, departmentId, suggestion.TargetDepartmentId);
 
         var department = await _context.Departments
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == suggestion.TargetDepartmentId, cancellationToken);
 
-        var allowedActions = SuggestionVisibility.ComputeActions(suggestion, userId, canModerate);
+        var template = suggestion.TemplateId is { } templateId
+            ? await _context.Templates.AsNoTracking()
+                .Where(t => t.Id == templateId)
+                .Select(t => new { t.Title, t.IsActive })
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
 
         // B01: authorName — ФИО автора, а не его идентификатор.
         // TODO(B06): для анонимной идеи обнулить и authorName, и createdBy.
@@ -73,9 +74,12 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             CurrentFlaws = suggestion.CurrentFlaws,
             ProposedSolution = suggestion.ProposedSolution,
             TemplateId = suggestion.TemplateId,
+            TemplateName = template?.Title,
+            TemplateIsActive = template?.IsActive,
             RegistrationNumber = suggestion.RegistrationNumber,
-            CommissionNote = suggestion.CommissionNote,
-            AllowedActions = allowedActions,
+            CommissionNote = isMine || canModerate ? suggestion.CommissionNote : null,
+            AllowedActions = SuggestionVisibility.ComputeActions(suggestion.Status, isMine, canModerate),
+            SubmissionCount = suggestion.SubmissionCount,
             // B01: маркер конкурентного изменения
             Version = SuggestionVersion.Compute(suggestion),
         };

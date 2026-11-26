@@ -1,6 +1,5 @@
 using KaizenBoard.Application.Common.Exceptions;
 using KaizenBoard.Application.Common.Interfaces;
-using KaizenBoard.Domain.Constants;
 using KaizenBoard.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +19,13 @@ public class ReturnByManagerCommandHandler : IRequestHandler<ReturnByManagerComm
 
     public async Task<Unit> Handle(ReturnByManagerCommand request, CancellationToken cancellationToken)
     {
-        var suggestion = await _context.Suggestions.FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
+        var suggestion = await _context.Suggestions
+            .ExcludeForeignDrafts(_user.Id)
+            .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
         if (suggestion == null) 
             throw new NotFoundException(nameof(Suggestion), request.Id.ToString());
 
-        var isManager = _user.Roles?.Contains(Roles.AdminL1) == true;
-        if (!isManager && suggestion.TargetDepartmentId != _user.DepartmentId)
+        if (!SuggestionVisibility.CanModerate(_user.Roles, _user.DepartmentId, suggestion.TargetDepartmentId))
             throw new ForbiddenAccessException();
 
         suggestion.ReturnByManager(request.Reason);

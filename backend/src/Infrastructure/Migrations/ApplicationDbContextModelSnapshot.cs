@@ -76,6 +76,14 @@ namespace KaizenBoard.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("CreationKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CreationPayloadHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("CurrentFlaws")
                         .IsRequired()
                         .HasColumnType("text");
@@ -113,6 +121,7 @@ namespace KaizenBoard.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("LastModified")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastModifiedBy")
@@ -136,6 +145,9 @@ namespace KaizenBoard.Infrastructure.Migrations
                     b.Property<DateTime?>("StatusDeadlineAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("SubmissionCount")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("TargetDepartmentId")
                         .HasColumnType("uuid");
 
@@ -155,6 +167,10 @@ namespace KaizenBoard.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("TargetDepartmentId");
+
+                    b.HasIndex("CreatedBy", "CreationKey")
+                        .IsUnique()
+                        .HasFilter("\"CreationKey\" IS NOT NULL");
 
                     b.ToTable("Suggestions");
                 });

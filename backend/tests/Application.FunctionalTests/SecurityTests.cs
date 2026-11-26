@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using KaizenBoard.Application.Common.Models;
 using KaizenBoard.Application.Features.Suggestions.Queries.GetSuggestions;
 using KaizenBoard.Domain.Constants;
 using KaizenBoard.Domain.Entities;
@@ -137,6 +138,191 @@ public class SecurityTests : TestBase
         saved.Title.ShouldBe(idea.Title);
     }
 
+    [Test]
+    public async Task Create_replays_the_original_id_for_parallel_requests_and_rejects_changed_content()
+    {
+        var department = await CreateDepartment("Idempotency");
+        await TestApp.RunAsUserAsync("author@example.test", FixturePassword, [Roles.User]);
+        await TestApp.RunAsUserAsync("other@example.test", FixturePassword, [Roles.User]);
+        using var author = await Login("author@example.test");
+        using var other = await Login("other@example.test");
+        var input = new SuggestionInput(
+            "Original title", "Problem", "Solution", "Process", department.Id);
+        const string key = "attempt-1";
+
+        var responses = await Task.WhenAll(Create(author, input, key), Create(author, input, key));
+        var ids = new List<Guid>();
+        foreach (var response in responses)
+        {
+            using (response)
+            {
+                response.StatusCode.ShouldBe(HttpStatusCode.Created);
+                var id = await response.Content.ReadFromJsonAsync<Guid>();
+                response.Headers.Location!.OriginalString.ShouldBe($"/api/suggestions/{id}");
+                ids.Add(id);
+            }
+        }
+        ids[1].ShouldBe(ids[0]);
+        (await TestApp.CountAsync<Suggestion>()).ShouldBe(1);
+
+        (await Create(author, input with { Title = "" }, key)).StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await Create(author, input, "invalid key")).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        using var duplicateHeader = new HttpRequestMessage(HttpMethod.Post, Suggestions + "/")
+        {
+            Content = JsonContent.Create(input)
+        };
+        duplicateHeader.Headers.Add("Idempotency-Key", new[] { "key-1", "key-2" });
+        (await author.SendAsync(duplicateHeader)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var otherResponse = await Create(other, input, key);
+        otherResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        (await otherResponse.Content.ReadFromJsonAsync<Guid>()).ShouldNotBe(ids[0]);
+        (await TestApp.CountAsync<Suggestion>()).ShouldBe(2);
+    }
+
+    [Test]
+    public async Task Archived_template_can_be_kept_but_cannot_be_selected_for_a_new_binding()
+    {
+        var department = await CreateDepartment("Templates");
+        var template = new Template { Title = "Original template", IsActive = true };
+        await TestApp.AddAsync(template);
+        await TestApp.RunAsUserAsync("author@example.test", FixturePassword, [Roles.User]);
+        var unbound = await CreateIdea(department.Id, SuggestionStatus.Draft);
+        await TestApp.RunAsUserAsync("leader@example.test", FixturePassword, [Roles.AdminL1]);
+        using var author = await Login("author@example.test");
+        using var leader = await Login("leader@example.test");
+        var input = new SuggestionInput(
+            "Original title", "Problem", "Solution", "Process", department.Id, template.Id);
+        var created = await Create(author, input, "archived-replay");
+        created.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var id = await created.Content.ReadFromJsonAsync<Guid>();
+        var route = $"{Suggestions}/{id}";
+        (await leader.PatchAsync($"/api/Templates/{template.Id}/archive", null))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var card = await ReadCard(author, id);
+        card.TemplateId.ShouldBe(template.Id);
+        card.TemplateName.ShouldBe(template.Title);
+        card.TemplateIsActive.ShouldBe(false);
+        (await Create(author, input)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        var unboundCard = await ReadCard(author, unbound.Id);
+        (await author.PutAsJsonAsync($"{Suggestions}/{unbound.Id}", new
+        {
+            input.Title, input.CurrentFlaws, input.ProposedSolution, input.ImprovementObject,
+            input.TargetDepartmentId, input.TemplateId, unboundCard.Version
+        })).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        (await author.PutAsJsonAsync(route, new
+        {
+            Title = "Edited title", input.CurrentFlaws, input.ProposedSolution, input.ImprovementObject,
+            input.TargetDepartmentId, input.TemplateId, card.Version
+        })).StatusCode.ShouldBe(HttpStatusCode.OK);
+        var replay = await Create(author, input, "archived-replay");
+        replay.StatusCode.ShouldBe(HttpStatusCode.Created);
+        (await replay.Content.ReadFromJsonAsync<Guid>()).ShouldBe(id);
+        (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await ReadCard(author, id)).TemplateId.ShouldBe(template.Id);
+    }
+
+    [Test]
+    public async Task Mine_edit_and_resubmit_follow_the_card_contract()
+    {
+        var department = await CreateDepartment("Workflow");
+        await TestApp.RunAsUserAsync("author@example.test", FixturePassword, [Roles.User]);
+        var draft = await CreateIdea(department.Id, SuggestionStatus.Draft);
+        var revision = await CreateIdea(department.Id, SuggestionStatus.RevisionRequired);
+        await TestApp.RunAsUserAsync("moderator@example.test", FixturePassword, [Roles.AdminL2], department.Id);
+        await TestApp.RunAsUserAsync("observer@example.test", FixturePassword, [Roles.User]);
+        await TestApp.RunAsUserAsync("leader@example.test", FixturePassword, [Roles.AdminL1]);
+        using var author = await Login("author@example.test");
+        using var moderator = await Login("moderator@example.test");
+        using var observer = await Login("observer@example.test");
+        using var leader = await Login("leader@example.test");
+        var route = $"{Suggestions}/{draft.Id}";
+
+        var mine = await author.GetFromJsonAsync<PagedResult<SuggestionDto>>(Suggestions + "/search?scope=mine", JsonOptions);
+        mine!.TotalCount.ShouldBe(2);
+        mine.Items.Single(s => s.Id == draft.Id).AuthorName.ShouldBe("author@example.test");
+        mine.Items.Single(s => s.Id == draft.Id).AllowedActions.ShouldBe(new[] { "edit", "submit" });
+        mine.Items.Single(s => s.Id == revision.Id).AllowedActions.ShouldBe(new[] { "edit" });
+        (await ReadCard(author, revision.Id)).AllowedActions.ShouldBe(new[] { "edit" });
+        (await author.PostAsync($"{Suggestions}/{revision.Id}/submit", null)).StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await observer.GetAsync(route)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await observer.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        var observerMine = await observer.GetFromJsonAsync<PagedResult<SuggestionDto>>(Suggestions + "/search?scope=mine", JsonOptions);
+        observerMine!.TotalCount.ShouldBe(0);
+
+        var card = await ReadCard(author, draft.Id);
+        card.IsMine.ShouldBeTrue();
+        card.DepartmentName.ShouldBe(department.Name);
+        Task<HttpResponseMessage> Edit(string title) => author.PutAsJsonAsync(route, new
+        {
+            title, card.CurrentFlaws, card.ProposedSolution, card.ImprovementObject, card.TargetDepartmentId, card.Version
+        });
+
+        (await observer.PutAsJsonAsync(route, new
+        {
+            card.Title, card.CurrentFlaws, card.ProposedSolution, card.ImprovementObject, card.TargetDepartmentId, card.Version
+        })).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        var edits = await Task.WhenAll(Edit("First edit"), Edit("Second edit"));
+        edits.Select(result => result.StatusCode).ShouldBe(new[] { HttpStatusCode.OK, HttpStatusCode.Conflict }, ignoreOrder: true);
+        (await ReadCard(author, draft.Id)).Status.ShouldBe(SuggestionStatus.Draft);
+
+        (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await ReadCard(moderator, draft.Id)).AllowedActions.ShouldBe(new[] { "moderate" });
+        (await moderator.PostAsJsonAsync(route + "/return", new { reason = "Clarify the solution" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var returned = await ReadCard(author, draft.Id);
+        returned.Status.ShouldBe(SuggestionStatus.ReturnedByManager);
+        returned.AllowedActions.ShouldBe(new[] { "edit", "submit" });
+        returned.SubmissionCount.ShouldBe(card.SubmissionCount + 1);
+        returned.CommissionNote.ShouldBe("Clarify the solution");
+        (await ReadCard(moderator, draft.Id)).CommissionNote.ShouldBe(returned.CommissionNote);
+        (await ReadCard(leader, draft.Id)).CommissionNote.ShouldBe(returned.CommissionNote);
+        (await ReadCard(observer, draft.Id)).CommissionNote.ShouldBeNull();
+
+        (await author.PutAsJsonAsync(route, new
+        {
+            returned.Title, returned.CurrentFlaws, ProposedSolution = "Clarified solution",
+            returned.ImprovementObject, returned.TargetDepartmentId, returned.Version
+        })).StatusCode.ShouldBe(HttpStatusCode.OK);
+        var revised = await ReadCard(author, draft.Id);
+        revised.Status.ShouldBe(SuggestionStatus.ReturnedByManager);
+        revised.SubmissionCount.ShouldBe(returned.SubmissionCount);
+
+        (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PostAsJsonAsync(route + "/return", new { reason = "Clarify the object" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var returnedAgain = await ReadCard(author, draft.Id);
+        returnedAgain.Status.ShouldBe(returned.Status);
+        returnedAgain.SubmissionCount.ShouldBe(returned.SubmissionCount + 1);
+
+        (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PostAsJsonAsync(route + "/approve", new { regNumber = "MVP-01-1" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var inCommission = await ReadCard(leader, draft.Id);
+        inCommission.RegistrationNumber.ShouldBe("MVP-01-1");
+        inCommission.AllowedActions.ShouldBeEmpty();
+    }
+
+    private static async Task<HttpResponseMessage> Create(HttpClient client, SuggestionInput input, string? key = null)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, Suggestions + "/")
+        {
+            Content = JsonContent.Create(input)
+        };
+        if (key is not null)
+            request.Headers.Add("Idempotency-Key", key);
+
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<SuggestionDetailsDto> ReadCard(HttpClient client, Guid id) =>
+        (await client.GetFromJsonAsync<SuggestionDetailsDto>($"{Suggestions}/{id}", JsonOptions))!;
+
     private static async Task<Department> CreateDepartment(string name)
     {
         var department = new Department { Name = name };
@@ -165,4 +351,7 @@ public class SecurityTests : TestBase
 
     private sealed record SearchResult(SuggestionDto[] Items);
     private sealed record VersionResult(string Version);
+    private sealed record SuggestionInput(
+        string Title, string CurrentFlaws, string ProposedSolution, string ImprovementObject,
+        Guid TargetDepartmentId, Guid? TemplateId = null);
 }
