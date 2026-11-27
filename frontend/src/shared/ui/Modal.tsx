@@ -1,5 +1,13 @@
 import { useEffect, useId, useRef } from 'react'
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
+
+function isBackdrop(event: MouseEvent<HTMLDialogElement>) {
+  if (event.target !== event.currentTarget) return false
+  const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect()
+  return (
+    event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom
+  )
+}
 
 export function Modal({
   title,
@@ -13,6 +21,7 @@ export function Modal({
   busy?: boolean
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
+  const pressedBackdrop = useRef(false)
   const titleId = useId()
   useEffect(() => {
     const element = dialog.current!
@@ -41,17 +50,16 @@ export function Modal({
         e.preventDefault()
         if (!busy) onClose()
       }}
+      onPointerDown={(e) => {
+        pressedBackdrop.current = e.isPrimary && e.button === 0 && isBackdrop(e)
+      }}
+      onPointerCancel={() => {
+        pressedBackdrop.current = false
+      }}
       onClick={(e) => {
-        if (e.target === e.currentTarget && !busy) {
-          const r = e.currentTarget.getBoundingClientRect()
-          if (
-            e.clientX < r.left ||
-            e.clientX > r.right ||
-            e.clientY < r.top ||
-            e.clientY > r.bottom
-          )
-            onClose()
-        }
+        const startedOnBackdrop = pressedBackdrop.current
+        pressedBackdrop.current = false
+        if (!busy && startedOnBackdrop && isBackdrop(e)) onClose()
       }}
     >
       <div className="modal-head">

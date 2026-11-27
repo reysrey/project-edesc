@@ -45,6 +45,10 @@ async function app(page: Page, leader = false) {
     (url) => url.pathname.startsWith('/api/'),
     (route) => {
       const path = new URL(route.request().url()).pathname
+      if (path === '/api/Suggestions/search')
+        return route.fulfill({
+          json: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 },
+        })
       const data =
         path === '/api/Users/me'
           ? {
@@ -57,17 +61,23 @@ async function app(page: Page, leader = false) {
             }
           : path === '/api/Templates/'
             ? [
-                {
-                  id: '11111111-1111-4111-8111-111111111111',
-                  type: 'Template',
-                  departmentId: null,
-                  improvementObject: 'Процесс',
-                  title: 'Особый шаблон',
-                  problemHint: '',
-                  solutionHint: '',
-                  isActive: true,
-                },
-              ]
+                'Модернизация',
+                'Сокращение времени',
+                'Безопасность',
+                'Качество',
+                'Экономия ресурсов',
+                'Другое',
+                'Особый шаблон',
+              ].map((title, index) => ({
+                id: `11111111-1111-4111-8111-${String(index).padStart(12, '0')}`,
+                type: 'Template',
+                departmentId: null,
+                improvementObject: 'Процесс',
+                title,
+                problemHint: '',
+                solutionHint: '',
+                isActive: true,
+              }))
             : path === '/api/Suggestions/'
               ? [
                   'Draft',

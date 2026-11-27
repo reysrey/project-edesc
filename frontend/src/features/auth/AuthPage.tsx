@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../../shared/api/resources'
 import { ApiError } from '../../shared/api/client'
 import { ErrorMessage, Loading } from '../../shared/ui/Feedback'
 import { Brand, ThemeToggle } from '../../app/Theme'
 import { sessionKey, useSession } from './session'
+import { isSuggestionPath } from '../suggestions/navigation'
+import type { SuggestionNavigation } from '../suggestions/navigation'
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset'
 export function AuthPage() {
@@ -21,6 +23,9 @@ export function AuthPage() {
   const session = useSession()
   const client = useQueryClient()
   const navigate = useNavigate()
+  const { state } = useLocation()
+  const suggestionPath = (state as SuggestionNavigation | null)?.suggestionPath
+  const afterLogin = isSuggestionPath(suggestionPath) ? suggestionPath : '/'
   const mutation = useMutation({
     mutationFn: async () => {
       if (mode === 'register') {
@@ -43,7 +48,7 @@ export function AuthPage() {
       setConfirm('')
       if (profile) {
         client.setQueryData(sessionKey, profile)
-        navigate('/', { replace: true })
+        navigate(afterLogin, { replace: true })
       } else {
         setNotice(
           mode === 'register'
@@ -57,7 +62,7 @@ export function AuthPage() {
     },
   })
   if (session.isPending) return <Loading />
-  if (session.data) return <Navigate to="/" replace />
+  if (session.data) return <Navigate to={afterLogin} replace />
   function switchMode(next: Mode) {
     setMode(next)
     setNotice('')

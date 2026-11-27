@@ -1,12 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../shared/api/resources'
 import { ApiError } from '../shared/api/client'
 import { ErrorMessage, Loading } from '../shared/ui/Feedback'
+import { Icon } from '../shared/ui/Icon'
 import { sessionKey, useSession } from '../features/auth/session'
 import { roleLabels, roleOf } from '../features/auth/roles'
 import { queues } from '../features/suggestions/queues'
 import { useSuggestions } from '../features/suggestions/model'
+import { isSuggestionPath } from '../features/suggestions/navigation'
 import { Brand, ThemeToggle } from './Theme'
 
 function Sidebar({ leader }: { leader: boolean }) {
@@ -44,6 +46,9 @@ function Sidebar({ leader }: { leader: boolean }) {
           )}
         </NavLink>
       ))}
+      <NavLink className="nav-btn" to="/my-suggestions">
+        Мои предложения
+      </NavLink>
       {leader && (
         <>
           <NavLink className="nav-btn" to="/effectiveness">
@@ -85,6 +90,7 @@ export function Layout() {
   const session = useSession()
   const client = useQueryClient()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const logout = useMutation({
     mutationFn: api.logout,
     onSuccess: async () => {
@@ -99,7 +105,13 @@ export function Layout() {
     (session.error instanceof ApiError && session.error.status === 401) ||
     (!session.data && !session.error)
   )
-    return <Navigate to="/login" replace />
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={isSuggestionPath(pathname) ? { suggestionPath: pathname } : undefined}
+      />
+    )
   if (!session.data)
     return (
       <main className="employee-main">
@@ -140,15 +152,16 @@ export function Layout() {
           </div>
           <div className="topbar-actions">
             <ThemeToggle />
-            <button
-              className="theme-toggle"
-              type="button"
-              disabled
-              aria-label="Уведомления пока недоступны"
-              title="Уведомления пока недоступны"
-            >
-              ♧
-            </button>
+            {role === 'employee' && (
+              <a
+                className="theme-toggle"
+                href="/#notifications"
+                aria-label="Уведомления"
+                title="Уведомления"
+              >
+                <Icon name="bell" />
+              </a>
+            )}
           </div>
           <button className="logout" disabled={logout.isPending} onClick={() => logout.mutate()}>
             {logout.isPending ? 'Выходим…' : 'Выйти'}

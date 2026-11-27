@@ -1,17 +1,15 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { Suggestion } from '../../shared/api/contracts'
 import { statuses } from '../../shared/api/contracts'
 import { Empty, ErrorMessage, Loading, PageHead } from '../../shared/ui/Feedback'
 import { Unavailable } from '../../shared/ui/Unavailable'
 import { formatDate } from '../../shared/lib/format'
 import { useSuggestions, statusConfig } from '../suggestions/model'
 import { Status } from '../suggestions/Status'
-import { SuggestionDetail } from '../suggestions/SuggestionDetail'
+import { useOpenSuggestion } from '../suggestions/navigation'
 
 export function OverviewPage() {
   const query = useSuggestions()
-  const [selected, setSelected] = useState<Suggestion>()
+  const openSuggestion = useOpenSuggestion()
   if (query.isPending) return <Loading />
   if (query.error)
     return (
@@ -90,7 +88,7 @@ export function OverviewPage() {
                     <small>{formatDate(s.created)}</small>
                   </div>
                   <Status status={s.status} />
-                  <button className="btn btn-light" onClick={() => setSelected(s)}>
+                  <button className="btn btn-light" onClick={() => openSuggestion(s.id)}>
                     Открыть
                   </button>
                 </div>
@@ -107,19 +105,12 @@ export function OverviewPage() {
         <h2>Активность подразделений</h2>
         <Unavailable>Разбивка по подразделениям пока недоступна.</Unavailable>
       </div>
-      {selected && (
-        <SuggestionDetail
-          suggestion={query.data.find((s) => s.id === selected.id) ?? selected}
-          manager
-          onClose={() => setSelected(undefined)}
-        />
-      )}
     </>
   )
 }
 export function EffectivenessPage() {
   const query = useSuggestions()
-  const [selected, setSelected] = useState<Suggestion>()
+  const openSuggestion = useOpenSuggestion()
   const done = (query.data ?? []).filter((s) => s.status === 'Implemented')
   return (
     <>
@@ -171,7 +162,7 @@ export function EffectivenessPage() {
                       <small>{formatDate(s.created)}</small>
                     </div>
                     <Status status={s.status} />
-                    <button className="btn btn-light" onClick={() => setSelected(s)}>
+                    <button className="btn btn-light" onClick={() => openSuggestion(s.id)}>
                       Результат →
                     </button>
                   </div>
@@ -187,9 +178,6 @@ export function EffectivenessPage() {
             Описание фактического результата, затраты и экономия пока недоступны.
           </Unavailable>
         </>
-      )}
-      {selected && (
-        <SuggestionDetail suggestion={selected} manager onClose={() => setSelected(undefined)} />
       )}
     </>
   )

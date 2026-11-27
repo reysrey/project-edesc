@@ -266,6 +266,82 @@ fieldset {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
+.welcome-actions,
+.suggestion-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.suggestion-meta {
+  margin: 8px 0 20px;
+}
+.suggestion-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+  gap: 12px 18px;
+  margin: 0;
+  padding: 14px 0;
+  border-block: 1px solid var(--line);
+}
+.suggestion-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.suggestion-facts dd {
+  margin: 0;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.suggestion-text h3,
+.suggestion-note h3,
+.suggestion-conflict h3 {
+  margin: 18px 0 6px;
+  font-size: 14px;
+}
+.suggestion-text p,
+.suggestion-note p {
+  margin: 0;
+  max-width: 68ch;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.suggestion-note,
+.suggestion-conflict {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+.suggestion-note h3,
+.suggestion-conflict > p:first-child {
+  margin-top: 0;
+}
+.suggestion-moderation {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.suggestion-history {
+  margin-top: 16px;
+  padding: 12px 0;
+  border-block: 1px solid var(--line);
+}
+.suggestion-history summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.suggestion-history li {
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.suggestion-history li small {
+  display: block;
+  color: var(--muted);
+}
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -462,6 +538,9 @@ html[data-theme='dark'] .success-message {
   display: flex;
   align-items: center;
   gap: 7px;
+}
+.notifications-toggle {
+  margin-top: 12px;
 }
 .company-label {
   white-space: nowrap;

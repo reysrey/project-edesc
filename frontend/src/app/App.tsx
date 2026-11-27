@@ -1,4 +1,12 @@
-import { BrowserRouter, Route, Routes, Link, Navigate, useOutletContext } from 'react-router-dom'
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  Link,
+  Navigate,
+  useLocation,
+  useOutletContext,
+} from 'react-router-dom'
 import type { ReactNode } from 'react'
 import type { Profile } from '../shared/api/contracts'
 import { Layout } from './Layout'
@@ -6,6 +14,9 @@ import { AuthPage } from '../features/auth/AuthPage'
 import { roleOf, isLeader, canModerate } from '../features/auth/roles'
 import { Dashboard } from '../features/suggestions/Dashboard'
 import { SuggestionsPage } from '../features/suggestions/SuggestionsPage'
+import { SuggestionRoute } from '../features/suggestions/SuggestionDetail'
+import type { SuggestionNavigation } from '../features/suggestions/navigation'
+import { useSession } from '../features/auth/session'
 import { TemplatesPage, DepartmentsPage } from '../features/catalog/CatalogPages'
 import { AnalyticsPage } from '../features/analytics/AnalyticsPage'
 import { OverviewPage, EffectivenessPage } from '../features/management/OverviewPage'
@@ -46,11 +57,26 @@ function StaffOnly({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <AppRoutes />
+    </BrowserRouter>
+  )
+}
+
+function AppRoutes() {
+  const location = useLocation()
+  const { data: profile } = useSession()
+  const background = profile
+    ? (location.state as SuggestionNavigation | null)?.suggestionFrom
+    : undefined
+  return (
+    <>
+      <Routes location={background ?? location}>
         <Route path="/login" element={<AuthPage />} />
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="suggestions" element={<SuggestionsPage />} />
+          <Route path="suggestions/:id" element={<SuggestionRoute />} />
+          <Route path="my-suggestions" element={<SuggestionsPage mine />} />
           {(['incoming', 'review', 'rework', 'processed'] as const).map((queue) => (
             <Route
               key={queue}
@@ -132,6 +158,11 @@ export default function App() {
           />
         </Route>
       </Routes>
-    </BrowserRouter>
+      {background && (
+        <Routes>
+          <Route path="suggestions/:id" element={<SuggestionRoute />} />
+        </Routes>
+      )}
+    </>
   )
 }

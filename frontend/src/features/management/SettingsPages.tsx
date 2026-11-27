@@ -1,48 +1,128 @@
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import type { Profile } from '../../shared/api/contracts'
-import { PageHead } from '../../shared/ui/Feedback'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '../../shared/api/resources'
+import { ApiError } from '../../shared/api/client'
+import type { Profile, ServiceSettings } from '../../shared/api/contracts'
+import { Empty, ErrorMessage, Loading, PageHead } from '../../shared/ui/Feedback'
 import { Unavailable } from '../../shared/ui/Unavailable'
 import { roleLabels, roleOf } from '../auth/roles'
 import { Brand } from '../../app/Theme'
 import { onColor, readableColor } from '../../shared/lib/colors'
+import { serviceSettingsKey, suggestionsKey, useServiceSettings } from '../suggestions/model'
 
 export function UsersPage() {
   const profile = useOutletContext<Profile>()
+  const [search, setSearch] = useState('')
+  const [department, setDepartment] = useState('')
+  const [role, setRole] = useState('')
+  const [page, setPage] = useState(1)
+  const departments = useQuery({
+    queryKey: ['departments'],
+    queryFn: ({ signal }) => api.departments(signal),
+  })
+  const params = new URLSearchParams({ pageNumber: String(page) })
+  if (search.trim()) params.set('search', search.trim())
+  if (department) params.set('departmentId', department)
+  if (role) params.set('role', role)
+  const directory = useQuery({
+    queryKey: ['employees', profile.id, params.toString()],
+    queryFn: ({ signal }) => api.employees(params, signal),
+  })
+  const pages = Math.max(
+    1,
+    Math.ceil((directory.data?.totalCount ?? 0) / (directory.data?.pageSize ?? 20)),
+  )
   return (
     <>
-      <PageHead title="Пользователи" subtitle="Управление доступом и ролями участников." />
-      <Unavailable>
-        Список пользователей, назначение ролей и блокировка пока недоступны.
-      </Unavailable>
+      <PageHead title="Пользователи" subtitle="Учётные записи, роли и подразделения." />
       <div className="toolbar">
         <input
           type="search"
           placeholder="Поиск по имени, почте или должности…"
           aria-label="Поиск пользователей"
-          disabled
+          value={search}
+          maxLength={200}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setPage(1)
+          }}
         />
+        <select
+          aria-label="Подразделение пользователя"
+          value={department}
+          onChange={(event) => {
+            setDepartment(event.target.value)
+            setPage(1)
+          }}
+        >
+          <option value="">Все подразделения</option>
+          {departments.data?.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Роль пользователя"
+          value={role}
+          onChange={(event) => {
+            setRole(event.target.value)
+            setPage(1)
+          }}
+        >
+          <option value="">Все роли</option>
+          <option value="User">Сотрудник</option>
+          <option value="AdminL2">Модератор</option>
+          <option value="AdminL1">Руководитель</option>
+        </select>
       </div>
-      <div className="panel">
-        <h2>Ваша учётная запись</h2>
-        <div className="my-item user-row">
-          <div>
-            <b>
-              {profile.fullName === 'Главный Администратор'
-                ? 'Руководитель'
-                : profile.fullName || profile.email}
-            </b>
-            <small>{profile.email}</small>
-          </div>
-          <span className="status st-ok">{roleLabels[roleOf(profile)]}</span>
-          <button className="btn btn-line" disabled>
-            Изменить роль
+      <ErrorMessage error={departments.error} />
+      {directory.isPending ? (
+        <Loading />
+      ) : directory.error ? (
+        <>
+          <ErrorMessage error={directory.error} />
+          <button className="btn btn-line" onClick={() => void directory.refetch()}>
+            Обновить
           </button>
-          <button className="btn btn-danger" disabled>
-            Заблокировать
-          </button>
+        </>
+      ) : directory.data.items.length ? (
+        <div className="my-list">
+          {directory.data.items.map((user) => (
+            <article className="my-item user-row" key={user.id}>
+              <div>
+                <b>{user.fullName || user.email}</b>
+                <small>{user.email}</small>
+                {user.position && <small>{user.position}</small>}
+              </div>
+              <span>{user.departmentName || 'Подразделение не указано'}</span>
+              <span className="status st-ok">{roleLabels[roleOf(user)]}</span>
+            </article>
+          ))}
         </div>
-      </div>
+      ) : (
+        <Empty title="Пользователи не найдены" />
+      )}
+      {(page > 1 || pages > 1) && (
+        <nav className="pagination" aria-label="Страницы пользователей">
+          <span>
+            {page} / {pages}
+          </span>
+          <div>
+            <button className="btn btn-line" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+              Назад
+            </button>
+            <button
+              className="btn btn-line"
+              disabled={page >= pages}
+              onClick={() => setPage(page + 1)}
+            >
+              Далее
+            </button>
+          </div>
+        </nav>
+      )}
     </>
   )
 }
@@ -55,7 +135,6 @@ const formFields = [
   ['Ожидаемый эффект', false],
   ['Фото «До»', false],
   ['Фото «После»', false],
-  ['Анонимная подача', false],
 ] as const
 export function FormSettingsPage() {
   return (
@@ -109,38 +188,117 @@ export function FormSettingsPage() {
   )
 }
 export function ServiceSettingsPage() {
-  const settings = [
-    ['Поддержка предложений', 'Одна кнопка «Поддержать» для полезных инициатив.'],
-    ['Анонимная подача', 'Подача идеи без отображения имени автора.'],
-    ['Уведомления о статусах', 'Обратная связь при изменении статуса предложения.'],
-    ['Публичная доска идей', 'Доступность предложений для других сотрудников.'],
-  ]
+  const settings = useServiceSettings()
   return (
     <>
       <PageHead
         title="Настройки сервиса"
         subtitle="Возможности IdeaHub для сотрудников предприятия."
       />
-      <Unavailable>
-        Общие настройки пока недоступны. Переключатели не показывают действующие значения.
-      </Unavailable>
-      <div className="panel">
-        <fieldset disabled>
-          {settings.map(([title, description]) => (
+      {settings.isPending ? (
+        <Loading />
+      ) : settings.data ? (
+        <ServiceSettingsForm
+          initial={settings.data}
+          reload={async () => (await settings.refetch({ throwOnError: true })).data!}
+        />
+      ) : (
+        <>
+          <ErrorMessage error={settings.error} />
+          <button className="btn btn-line" onClick={() => void settings.refetch()}>
+            Повторить загрузку
+          </button>
+        </>
+      )}
+    </>
+  )
+}
+
+const settingsFields = [
+  [
+    'supportEnabled',
+    'Поддержка предложений',
+    'Сотрудники могут поддерживать идеи коллег и отзывать свою поддержку.',
+  ],
+  [
+    'anonymousEnabled',
+    'Анонимная подача',
+    'Автор может скрыть своё имя при подготовке предложения.',
+  ],
+  [
+    'notificationsEnabled',
+    'Уведомления о статусах',
+    'Уведомляет авторов о новых решениях по их предложениям.',
+  ],
+  [
+    'boardEnabled',
+    'Публичная доска идей',
+    'Сотрудники могут читать предложения коллег. Доступ к своим идеям сохраняется.',
+  ],
+] as const
+
+function ServiceSettingsForm({
+  initial,
+  reload,
+}: {
+  initial: ServiceSettings
+  reload: () => Promise<ServiceSettings>
+}) {
+  const client = useQueryClient()
+  const [form, setForm] = useState(initial)
+  const save = useMutation({
+    mutationFn: () => api.updateServiceSettings(form),
+    onSuccess: async (settings) => {
+      setForm(settings)
+      client.setQueryData(serviceSettingsKey, settings)
+      await client.invalidateQueries({ queryKey: suggestionsKey })
+    },
+  })
+  const refresh = useMutation({
+    mutationFn: reload,
+    onSuccess: (settings) => {
+      setForm(settings)
+      save.reset()
+    },
+  })
+  const busy = save.isPending || refresh.isPending
+  const conflict = save.error instanceof ApiError && save.error.status === 409
+  return (
+    <div className="panel">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!busy && !conflict) save.mutate()
+        }}
+      >
+        <fieldset disabled={busy}>
+          {settingsFields.map(([field, title, description]) => (
             <label className="setting-row" key={title}>
               <span>
                 <b>{title}</b>
                 <small>{description}</small>
               </span>
-              <input type="checkbox" aria-label={title} />
+              <input
+                type="checkbox"
+                aria-label={title}
+                checked={form[field]}
+                onChange={(event) => setForm({ ...form, [field]: event.target.checked })}
+              />
             </label>
           ))}
-          <button className="btn btn-primary settings-hint" disabled>
-            Сохранить настройки
+          <ErrorMessage error={save.error ?? refresh.error} />
+          {save.isSuccess && <p role="status">Настройки сохранены.</p>}
+          {conflict && (
+            <button type="button" className="btn btn-line" onClick={() => refresh.mutate()}>
+              Загрузить актуальные настройки
+            </button>
+          )}
+          <button className="btn btn-primary settings-hint" disabled={conflict}>
+            {save.isPending ? 'Сохраняем…' : 'Сохранить настройки'}
           </button>
         </fieldset>
-      </div>
-    </>
+      </form>
+    </div>
   )
 }
 export function CompanyPage() {

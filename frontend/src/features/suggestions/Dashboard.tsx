@@ -1,30 +1,34 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useOutletContext } from 'react-router-dom'
+import { Link, useLocation, useOutletContext } from 'react-router-dom'
 import type { Profile, Template } from '../../shared/api/contracts'
 import { api } from '../../shared/api/resources'
 import { Empty, ErrorMessage, Loading } from '../../shared/ui/Feedback'
-import { Unavailable } from '../../shared/ui/Unavailable'
+import { formatDate } from '../../shared/lib/format'
 import { SuggestionForm } from './SuggestionForm'
 import { SuggestionsPage } from './SuggestionsPage'
 import { Icon } from '../../shared/ui/Icon'
 import { templateIcon } from '../catalog/templateIcon'
-
-const directions = [
-  ['Модернизация', 'settings', 'Оборудование, инструменты и новые способы работы'],
-  ['Сокращение времени', 'clock', 'Устранение лишних действий и ожидания'],
-  ['Безопасность', 'shield', 'Рабочая среда, риски и профилактика'],
-  ['Качество', 'diamond', 'Стабильность результата и снижение брака'],
-  ['Экономия ресурсов', 'leaf', 'Материалы, энергия и рациональное использование'],
-  ['Другое', 'plus', 'Любые идеи, которые делают работу лучше'],
-] as const
+import { statusConfig, suggestionsKey, useServiceSettings } from './model'
 export function Dashboard() {
   const profile = useOutletContext<Profile>()
+  const location = useLocation()
   const templates = useQuery({
     queryKey: ['templates'],
     queryFn: ({ signal }) => api.templates(signal),
   })
-  const [form, setForm] = useState<{ template?: Template; initialObject?: string }>()
+  const settings = useServiceSettings()
+  const notifications = useQuery({
+    queryKey: [...suggestionsKey, 'notifications', profile.id],
+    queryFn: ({ signal }) => api.notifications(signal),
+    refetchOnWindowFocus: 'always',
+  })
+  const [form, setForm] = useState<{ template?: Template }>()
+  const [notificationsExpanded, setNotificationsExpanded] = useState(false)
+  const notificationItems = notifications.data ?? []
+  const visibleNotifications = notificationsExpanded
+    ? notificationItems
+    : notificationItems.slice(0, 3)
   return (
     <>
       <section className="welcome">
@@ -37,44 +41,73 @@ export function Dashboard() {
           </h1>
           <p>Ваши наблюдения могут сделать работу предприятия лучше.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setForm({})}>
-          ＋ Предложить идею
-        </button>
+        <div className="welcome-actions">
+          <Link className="btn btn-light" to="/my-suggestions">
+            Мои предложения
+          </Link>
+          <button className="btn btn-primary" onClick={() => setForm({})}>
+            ＋ Предложить идею
+          </button>
+        </div>
       </section>
-      <section className="section" id="notifications">
+      <section className="section" id="notifications" aria-labelledby="notifications-title">
         <div className="section-head">
           <div>
-            <h2>Уведомления</h2>
+            <h2 id="notifications-title">Уведомления</h2>
             <p>Обратная связь по вашим предложениям.</p>
           </div>
         </div>
-        <Unavailable>
-          Уведомления пока недоступны. Изменения статуса можно посмотреть на доске предложений.
-        </Unavailable>
+        {notifications.isPending ? (
+          <Loading />
+        ) : notifications.error ? (
+          <ErrorMessage error={notifications.error} />
+        ) : notificationItems.length ? (
+          <>
+            <div className="my-list" id="notification-items">
+              {visibleNotifications.map((notification) => (
+                <Link
+                  className="my-item"
+                  to={`/suggestions/${notification.suggestionId}`}
+                  state={{ suggestionFrom: location }}
+                  key={notification.id}
+                >
+                  <div>
+                    <b>{notification.title}</b>
+                    <small>{formatDate(notification.occurredAt)}</small>
+                  </div>
+                  <span>{statusConfig[notification.status].label}</span>
+                </Link>
+              ))}
+            </div>
+            {notificationItems.length > 3 && (
+              <button
+                type="button"
+                className="btn btn-line notifications-toggle"
+                aria-controls="notification-items"
+                aria-expanded={notificationsExpanded}
+                onClick={() => setNotificationsExpanded(!notificationsExpanded)}
+              >
+                {notificationsExpanded ? 'Свернуть уведомления' : 'Показать ещё уведомления'}
+              </button>
+            )}
+          </>
+        ) : (
+          <p>
+            {settings.data?.notificationsEnabled === false
+              ? 'Уведомления отключены.'
+              : 'Уведомлений пока нет.'}
+          </p>
+        )}
       </section>
       <section className="section">
         <div className="section-head">
           <div>
             <h2>Картотека шаблонов и узких мест</h2>
-            <p>Выберите направление — форма предложения уже будет подготовлена.</p>
+            <p>Выберите шаблон, чтобы заполнить объект улучшения и получить подсказки.</p>
           </div>
-          <span className="aside">БЫСТРЫЙ СТАРТ ↗</span>
-        </div>
-        <div className="template-grid">
-          {directions.map(([title, icon, description]) => (
-            <button
-              className="template"
-              key={title}
-              onClick={() => setForm({ initialObject: title })}
-            >
-              <span className="arrow">↗</span>
-              <span className="emoji" aria-hidden="true">
-                <Icon name={icon} />
-              </span>
-              <b>{title}</b>
-              <span>{description}</span>
-            </button>
-          ))}
+          <Link className="text-link" to="/templates">
+            Все шаблоны
+          </Link>
         </div>
         {templates.isPending ? (
           <Loading />
@@ -85,58 +118,30 @@ export function Dashboard() {
               Повторить загрузку шаблонов
             </button>
           </>
+        ) : templates.data?.length ? (
+          <div className="template-grid">
+            {templates.data.map((t) => (
+              <button className="template" key={t.id} onClick={() => setForm({ template: t })}>
+                <span className="emoji" aria-hidden="true">
+                  <Icon name={templateIcon(t)} />
+                </span>
+                <b>{t.title}</b>
+                <span>{t.improvementObject}</span>
+                <span className="arrow">↗</span>
+              </button>
+            ))}
+          </div>
         ) : (
-          !!templates.data?.length && (
-            <>
-              <div className="section-head template-subheading">
-                <div>
-                  <h3>Шаблоны предприятия</h3>
-                  <p>Подсказки для конкретных процессов и рабочих мест.</p>
-                </div>
-                <Link className="text-link" to="/templates">
-                  Все шаблоны →
-                </Link>
-              </div>
-              <div className="template-grid">
-                {templates.data.map((t) => (
-                  <button className="template" key={t.id} onClick={() => setForm({ template: t })}>
-                    <span className="emoji" aria-hidden="true">
-                      <Icon name={templateIcon(t)} />
-                    </span>
-                    <b>{t.title}</b>
-                    <span>{t.improvementObject}</span>
-                    <span className="arrow">↗</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )
+          <Empty title="Активных шаблонов пока нет" />
         )}
       </section>
-      <section className="section" id="board">
+      <section className="section" id="board" aria-labelledby="suggestion-board-title">
         <SuggestionsPage embedded />
       </section>
-      <section className="section" id="my-suggestions">
-        <div className="section-head">
-          <div>
-            <h2>Мои предложения</h2>
-            <p>Ваши идеи и обратная связь по ним.</p>
-          </div>
-        </div>
-        <Empty title="Личный список пока недоступен">
-          <p>
-            Сейчас нельзя достоверно отделить ваши предложения от остальных. Отправленная идея
-            появится на общей доске.
-          </p>
-        </Empty>
+      <section className="section" id="my-suggestions" aria-labelledby="my-suggestions-title">
+        <SuggestionsPage embedded mine />
       </section>
-      {form && (
-        <SuggestionForm
-          template={form.template}
-          initialObject={form.initialObject}
-          onClose={() => setForm(undefined)}
-        />
-      )}
+      {form && <SuggestionForm template={form.template} onClose={() => setForm(undefined)} />}
     </>
   )
 }

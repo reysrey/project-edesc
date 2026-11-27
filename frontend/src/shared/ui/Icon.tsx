@@ -13,6 +13,7 @@ export type IconName =
   | 'star'
   | 'x'
   | 'heart'
+  | 'bell'
 
 export function Icon({ name }: { name: IconName }) {
   return (

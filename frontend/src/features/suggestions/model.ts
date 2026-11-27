@@ -3,8 +3,23 @@ import { api } from '../../shared/api/resources'
 import type { Suggestion } from '../../shared/api/contracts'
 
 export const suggestionsKey = ['suggestions'] as const
-export function useSuggestions() {
-  return useQuery({ queryKey: suggestionsKey, queryFn: ({ signal }) => api.suggestions(signal) })
+export const serviceSettingsKey = ['service-settings'] as const
+export function useServiceSettings(enabled = true) {
+  return useQuery({
+    queryKey: serviceSettingsKey,
+    queryFn: ({ signal }) => api.serviceSettings(signal),
+    enabled,
+    refetchOnWindowFocus: 'always',
+  })
+}
+export const suggestionKey = (userId: string, id: string) =>
+  [...suggestionsKey, 'detail', userId, id] as const
+export function useSuggestions(enabled = true) {
+  return useQuery({
+    queryKey: suggestionsKey,
+    queryFn: ({ signal }) => api.suggestions(signal),
+    enabled,
+  })
 }
 export const statusConfig: Record<Suggestion['status'], { label: string; className: string }> = {
   Draft: { label: 'Черновик', className: '' },
