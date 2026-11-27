@@ -61,16 +61,21 @@ type SuggestionStatus =
   | 'RevisionRequired' | 'Rejected' | 'ApprovedPlanning'
   | 'InImplementation' | 'Implemented';
 
-type SuggestionAction = 'edit' | 'submit' | 'moderate';
+type SuggestionAction = 'edit' | 'submit' | 'moderate' | 'commission' | 'support';
 
 type SuggestionDetails = {
   id: string; title: string; status: SuggestionStatus; created: string;
-  createdBy: string | null; authorName: string | null; isMine: boolean;
+  createdBy: string | null; authorName: string | null; isMine: boolean; isAnonymous: boolean;
   targetDepartmentId: string; departmentName: string | null;
   improvementObject: string; currentFlaws: string; proposedSolution: string;
   templateId: string | null; templateName: string | null; templateIsActive: boolean | null;
   registrationNumber: string | null; commissionNote: string | null;
   allowedActions: SuggestionAction[]; version: string; submissionCount: number;
+  supportCount: number; supportedByMe: boolean;
+  history: {
+    id: string; occurredAt: string; fromStatus: SuggestionStatus;
+    toStatus: SuggestionStatus; note: string | null;
+  }[];
 };
 ```
 
@@ -79,8 +84,12 @@ type SuggestionDetails = {
 | `allowedActions` | Кому и когда доступно | Вызов |
 | --- | --- | --- |
 | `edit` | Автору в `Draft`, `ReturnedByManager`, `RevisionRequired` | `PUT /api/Suggestions/{id}` |
-| `submit` | Автору в `Draft` и `ReturnedByManager` | `POST /api/Suggestions/{id}/submit` |
+| `submit` | Автору в `Draft`, `ReturnedByManager`, `RevisionRequired` | `POST /api/Suggestions/{id}/submit` |
 | `moderate` | Руководителю или модератору целевого подразделения в `Submitted` | `POST /api/Suggestions/{id}/approve` с `{regNumber}` или `/return` с `{reason}` |
+| `commission` | Руководителю или модератору целевого подразделения в `InCommission` | `POST /api/Suggestions/{id}/commission/{decision}` с `{version, note}` |
+| `support` | Читателю чужого видимого предложения при включённой поддержке. Доступно для состояний, кроме `Draft` и `Rejected` | `PUT` или `DELETE /api/Suggestions/{id}/support` |
+
+Допустимые решения комиссии — `approve`, `return` и `reject`. Успех возвращает `204`. Для возврата и отклонения требуется причина. При изменившейся версии сервер отвечает `409`. Замечания в истории доступны на тех же условиях, что `commissionNote`. У анонимного предложения для других пользователей `createdBy` и `authorName` равны `null`. Для поддержки действует ограничение в одну реакцию на пользователя и предложение.
 
 ### GET `/api/Suggestions/search?scope=mine`
 
@@ -103,6 +112,7 @@ type SuggestionListItem = {
   targetDepartmentId: string; departmentName: string | null;
   improvementObject: string; shortDescription: string;
   allowedActions: SuggestionAction[];
+  supportCount: number; supportedByMe: boolean;
 };
 
 type SuggestionSearchResult = {
@@ -123,6 +133,7 @@ type SuggestionInput = {
   title: string; currentFlaws: string; proposedSolution: string;
   improvementObject: string; targetDepartmentId: string;
   templateId?: string | null;
+  isAnonymous?: boolean;
 };
 
 type UpdateSuggestionInput = SuggestionInput & { version: string };
@@ -137,11 +148,17 @@ PUT сохраняет поля и возвращает `200 OK` с актуал
 
 ### POST `/api/Suggestions/{id}/submit`
 
-Вызов без тела. Автор подаёт `Draft` или `ReturnedByManager` и получает `204 No Content`. Переход в `Submitted` увеличивает `submissionCount` на единицу. Подача из `RevisionRequired` подключается в MVP-03.
+Вызов без тела. Автор подаёт `Draft`, `ReturnedByManager` или `RevisionRequired` и получает `204 No Content`. Переход в `Submitted` увеличивает `submissionCount` на единицу. При повторной передаче в комиссию сохраняется исходный регистрационный номер.
 
 Перед отправкой сохраните `submissionCount` из карточки. Если ответ потерялся, снова прочитайте карточку. Рост счётчика подтверждает, что подача произошла, даже если модератор уже успел вернуть ту же запись. Если счётчик прежний, повторить вызов можно при наличии `submit` в актуальном `allowedActions`. Счётчик учитывает подачи с момента применения миграции MVP-01. Для старых записей начальное значение равно нулю.
 
 Для PUT и submit чужой черновик и отсутствующий ID дают `404`, а чужая запись в другом статусе — `403`. Недопустимый или конкурентный переход при submit даёт `409`. Без авторизации сервер отвечает `401`.
+
+## Настройки, реестр и уведомления
+
+- `GET /api/ServiceSettings/` возвращает `supportEnabled`, `anonymousEnabled`, `notificationsEnabled`, `boardEnabled` и `version`. `PUT` с теми же полями доступен руководителю и возвращает сохранённые настройки. При конфликте версии возвращается `409`.
+- `GET /api/Users/directory` доступен руководителю. Поддерживает фильтры `search`, `role`, `departmentId` и параметры пагинации `pageNumber`, `pageSize`.
+- `GET /api/Users/notifications` возвращает до 20 уведомлений текущего пользователя в порядке от новых к старым. В записи есть `id`, `suggestionId`, `title`, `status` и `occurredAt`.
 
 ## B03 — P0: защита действий и пользователей
 
