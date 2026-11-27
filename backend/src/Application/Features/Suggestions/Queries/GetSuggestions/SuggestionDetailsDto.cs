@@ -24,7 +24,7 @@ public class SuggestionDetailsDto
     public List<string> AllowedActions { get; set; } = [];
     public int SubmissionCount { get; set; }
 
-    // B01: непрозрачный маркер конкурентного изменения.
+    // Непрозрачный маркер конкурентного изменения.
     // Клиент возвращает его в PUT, при устаревании сервер отвечает 409.
     public string Version { get; set; } = string.Empty;
 }

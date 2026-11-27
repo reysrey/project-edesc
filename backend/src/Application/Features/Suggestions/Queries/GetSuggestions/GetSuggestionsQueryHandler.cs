@@ -47,7 +47,7 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
             })
             .ToListAsync(cancellationToken);
 
-        // B01: подразделения и авторы — отдельными запросами, чтобы
+        // Подразделения и авторы — отдельными запросами, чтобы
         // не плодить N+1 на каждой строке списка.
         var departmentIds = rows.Select(s => s.TargetDepartmentId).Distinct().ToList();
         var departments = await _context.Departments

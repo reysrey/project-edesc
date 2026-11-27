@@ -80,11 +80,11 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
         suggestion.TargetDepartmentId = request.TargetDepartmentId;
         suggestion.TemplateId = request.TemplateId;
 
-        // B02: обычное сохранение не переводит статус в Submitted — это делает /submit.
+        // Обычное сохранение не переводит статус в Submitted — это делает /submit.
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // B02: возвращаем актуальную версию уже после фиксации LastModified.
+        // Возвращаем актуальную версию уже после фиксации LastModified.
         return SuggestionVersion.Compute(suggestion);
     }
 }

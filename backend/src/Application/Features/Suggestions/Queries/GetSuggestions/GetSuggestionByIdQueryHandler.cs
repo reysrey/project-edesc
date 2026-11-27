@@ -53,7 +53,7 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
                 .FirstOrDefaultAsync(cancellationToken)
             : null;
 
-        // B01: authorName — ФИО автора, а не его идентификатор.
+        // authorName — ФИО автора, а не его идентификатор.
         // TODO(B06): для анонимной идеи обнулить и authorName, и createdBy.
         var authorName = suggestion.CreatedBy is null
             ? null
@@ -80,7 +80,7 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             CommissionNote = isMine || canModerate ? suggestion.CommissionNote : null,
             AllowedActions = SuggestionVisibility.ComputeActions(suggestion.Status, isMine, canModerate),
             SubmissionCount = suggestion.SubmissionCount,
-            // B01: маркер конкурентного изменения
+            // Маркер конкурентного изменения
             Version = SuggestionVersion.Compute(suggestion),
         };
     }

@@ -45,7 +45,7 @@ public class CreateSuggestionCommandHandler : IRequestHandler<CreateSuggestionCo
         if (!validation.IsValid)
             throw new ValidationException(validation.Errors);
 
-        // B02: неизвестное подразделение — понятная ошибка поля, а не сбой БД.
+        // Неизвестное подразделение — понятная ошибка поля, а не сбой БД.
         var departmentExists = await _context.Departments
             .AnyAsync(d => d.Id == input.TargetDepartmentId, cancellationToken);
 
@@ -57,7 +57,7 @@ public class CreateSuggestionCommandHandler : IRequestHandler<CreateSuggestionCo
             });
         }
 
-        // B02: привязанный шаблон должен существовать и быть активным.
+        // Привязанный шаблон должен существовать и быть активным.
         if (input.TemplateId is { } templateId)
         {
             var templateAvailable = await _context.Templates

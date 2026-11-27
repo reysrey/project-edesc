@@ -14,9 +14,9 @@ public class UpdateSuggestionCommand : IRequest<string>
     public string ImprovementObject { get; set; } = string.Empty;
     public Guid TargetDepartmentId { get; set; }
 
-    // B02: шаблон заявки; null — снять привязку.
+    // Шаблон заявки; null — снять привязку.
     public Guid? TemplateId { get; set; }
 
-    // B02: версия из GET /{id}; при расхождении сервер отвечает 409.
+    // Версия из GET /{id}; при расхождении сервер отвечает 409.
     public string Version { get; set; } = string.Empty;
 }
