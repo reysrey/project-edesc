@@ -19,7 +19,7 @@ IdeaHub — внутренний сервис предложений по улу
 Нужны .NET SDK 10.0.402 или совместимый по `global.json`, Node.js 24 и PostgreSQL 16. Выполните из корня репозитория, подставив путь к каталогу `bin` своей установки PostgreSQL.
 
 ```powershell
-.scripts\Start-LocalDemoApi.ps1 -PostgresBin 'C:\Program Files\PostgreSQL\16\bin' -WithFrontend
+.\scripts\Start-LocalDemoApi.ps1 -PostgresBin 'C:\Program Files\PostgreSQL\16\bin' -WithFrontend
 ```
 
 Когда появится `IdeaHub is ready` или `IdeaHub is already running`, откройте [IdeaHub](http://127.0.0.1:5175/). API слушает порт `5501`, PostgreSQL — `55441`. При необходимости скрипт установит зависимости фронтенда через `npm ci`. Docker для этого способа не нужен.
@@ -27,7 +27,7 @@ IdeaHub — внутренний сервис предложений по улу
 Для остановки выполните:
 
 ```powershell
-.scripts\Stop-LocalDemo.ps1 -PostgresBin 'C:\Program Files\PostgreSQL\16\bin'
+.\scripts\Stop-LocalDemo.ps1 -PostgresBin 'C:\Program Files\PostgreSQL\16\bin'
 ```
 
 Предложения, настройки и аккаунты сохраняются в `artifacts/workflow-demo/pgdata`. Логи запуска находятся в `artifacts/workflow-demo`. Если порт API или фронтенда занят, укажите свободные порты через `-ApiPort` и `-FrontendPort`. При остановке передайте те же значения.
