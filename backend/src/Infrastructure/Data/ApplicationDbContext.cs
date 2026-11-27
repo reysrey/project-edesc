@@ -14,6 +14,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Suggestion> Suggestions => Set<Suggestion>();
     public DbSet<Template> Templates => Set<Template>();
+    public DbSet<ServiceSettings> ServiceSettings => Set<ServiceSettings>();
+    public DbSet<SuggestionSupport> SuggestionSupports => Set<SuggestionSupport>();
+    public DbSet<SuggestionActivity> SuggestionActivities => Set<SuggestionActivity>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

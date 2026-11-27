@@ -27,11 +27,12 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
 
         var roles = _user.Roles ?? [];
         var departmentId = _user.DepartmentId;
+        var settings = await _context.ReadServiceSettingsAsync(cancellationToken);
 
         // Серверная видимость (B03.1) — до любых остальных фильтров.
         var rows = await _context.Suggestions
             .AsNoTracking()
-            .ApplyVisibility(userId, roles, departmentId)
+            .ApplyVisibility(userId, roles, departmentId, settings.BoardEnabled)
             .OrderByDescending(s => s.Created)
             .Select(s => new
             {
@@ -39,7 +40,10 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
                 s.Title,
                 s.Status,
                 s.Created,
-                s.CreatedBy,
+                IsMine = s.CreatedBy == userId,
+                CreatedBy = s.IsAnonymous && s.CreatedBy != userId ? null : s.CreatedBy,
+                SupportCount = s.Supports.Count,
+                SupportedByMe = s.Supports.Any(r => r.UserId == userId),
                 s.TargetDepartmentId,
                 s.ImprovementObject,
                 CurrentFlaws = s.CurrentFlaws.Length > 201 ? s.CurrentFlaws.Substring(0, 201) : s.CurrentFlaws,
@@ -73,9 +77,11 @@ public class GetSuggestionsQueryHandler : IRequestHandler<GetSuggestionsQuery, L
             DepartmentName = departments.GetValueOrDefault(s.TargetDepartmentId),
             ImprovementObject = s.ImprovementObject,
             ShortDescription = Shorten(s.CurrentFlaws, s.ProposedSolution),
+            SupportCount = s.SupportCount,
+            SupportedByMe = s.SupportedByMe,
             AllowedActions = SuggestionVisibility.ComputeActions(
-                s.Status, s.CreatedBy == userId,
-                SuggestionVisibility.CanModerate(roles, departmentId, s.TargetDepartmentId)),
+                s.Status, s.IsMine,
+                SuggestionVisibility.CanModerate(roles, departmentId, s.TargetDepartmentId), settings.SupportEnabled),
         }).ToList();
     }
 

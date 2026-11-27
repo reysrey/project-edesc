@@ -45,6 +45,9 @@ public class CreateSuggestionCommandHandler : IRequestHandler<CreateSuggestionCo
         if (!validation.IsValid)
             throw new ValidationException(validation.Errors);
 
+        if (input.IsAnonymous && !(await _context.ReadServiceSettingsAsync(cancellationToken)).AnonymousEnabled)
+            throw new ValidationException([new ValidationFailure(nameof(input.IsAnonymous), "Анонимная подача отключена.")]);
+
         // Неизвестное подразделение — понятная ошибка поля, а не сбой БД.
         var departmentExists = await _context.Departments
             .AnyAsync(d => d.Id == input.TargetDepartmentId, cancellationToken);
@@ -80,6 +83,7 @@ public class CreateSuggestionCommandHandler : IRequestHandler<CreateSuggestionCo
             ImprovementObject = input.ImprovementObject,
             TargetDepartmentId = input.TargetDepartmentId,
             TemplateId = input.TemplateId,
+            IsAnonymous = input.IsAnonymous,
             CreationKey = key,
             CreationPayloadHash = payloadHash,
             Status = SuggestionStatus.Draft

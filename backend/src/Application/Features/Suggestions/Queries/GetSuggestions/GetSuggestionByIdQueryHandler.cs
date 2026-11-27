@@ -31,9 +31,10 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
 
         var roles = _currentUser.Roles;
         var departmentId = _currentUser.DepartmentId;
+        var settings = await _context.ReadServiceSettingsAsync(cancellationToken);
         var suggestion = await _context.Suggestions
             .AsNoTracking()
-            .ApplyVisibility(userId, roles, departmentId)
+            .ApplyVisibility(userId, roles, departmentId, settings.BoardEnabled)
             .FirstOrDefaultAsync(s => s.Id == request.Id, cancellationToken);
 
         if (suggestion is null)
@@ -53,11 +54,17 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
                 .FirstOrDefaultAsync(cancellationToken)
             : null;
 
-        // authorName — ФИО автора, а не его идентификатор.
-        // TODO(B06): для анонимной идеи обнулить и authorName, и createdBy.
-        var authorName = suggestion.CreatedBy is null
+        var visibleAuthor = suggestion.IsAnonymous && !isMine ? null : suggestion.CreatedBy;
+        var authorName = visibleAuthor is null
             ? null
-            : await _identityService.GetUserDisplayNameAsync(suggestion.CreatedBy);
+            : await _identityService.GetUserDisplayNameAsync(visibleAuthor);
+        var supports = _context.SuggestionSupports.AsNoTracking().Where(s => s.SuggestionId == suggestion.Id);
+        var history = await _context.SuggestionActivities.AsNoTracking()
+            .Where(s => s.SuggestionId == suggestion.Id)
+            .OrderByDescending(s => s.OccurredAt).ThenByDescending(s => s.Id)
+            .Select(s => new SuggestionActivityDto(
+                s.Id, s.OccurredAt, s.FromStatus, s.ToStatus, isMine || canModerate ? s.Note : null))
+            .ToListAsync(cancellationToken);
 
         return new SuggestionDetailsDto
         {
@@ -65,9 +72,10 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             Title = suggestion.Title,
             Status = suggestion.Status,
             Created = suggestion.Created,
-            CreatedBy = suggestion.CreatedBy,
+            CreatedBy = visibleAuthor,
             AuthorName = authorName,
             IsMine = isMine,
+            IsAnonymous = suggestion.IsAnonymous,
             TargetDepartmentId = suggestion.TargetDepartmentId,
             DepartmentName = department?.Name,
             ImprovementObject = suggestion.ImprovementObject,
@@ -78,8 +86,11 @@ public class GetSuggestionByIdQueryHandler : IRequestHandler<GetSuggestionByIdQu
             TemplateIsActive = template?.IsActive,
             RegistrationNumber = suggestion.RegistrationNumber,
             CommissionNote = isMine || canModerate ? suggestion.CommissionNote : null,
-            AllowedActions = SuggestionVisibility.ComputeActions(suggestion.Status, isMine, canModerate),
+            AllowedActions = SuggestionVisibility.ComputeActions(suggestion.Status, isMine, canModerate, settings.SupportEnabled),
             SubmissionCount = suggestion.SubmissionCount,
+            SupportCount = await supports.CountAsync(cancellationToken),
+            SupportedByMe = await supports.AnyAsync(s => s.UserId == userId, cancellationToken),
+            History = history,
             // Маркер конкурентного изменения
             Version = SuggestionVersion.Compute(suggestion),
         };

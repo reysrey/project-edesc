@@ -61,6 +61,32 @@ namespace KaizenBoard.Infrastructure.Migrations
                     b.ToTable("Departments");
                 });
 
+            modelBuilder.Entity("KaizenBoard.Domain.Entities.ServiceSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("AnonymousEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BoardEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotificationsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SupportEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ServiceSettings");
+                });
+
             modelBuilder.Entity("KaizenBoard.Domain.Entities.Suggestion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -120,6 +146,9 @@ namespace KaizenBoard.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset>("LastModified")
                         .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone");
@@ -175,6 +204,56 @@ namespace KaizenBoard.Infrastructure.Migrations
                     b.ToTable("Suggestions");
                 });
 
+            modelBuilder.Entity("KaizenBoard.Domain.Entities.SuggestionActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("FromStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("NotifyAuthor")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SuggestionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ToStatus")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SuggestionId", "OccurredAt");
+
+                    b.ToTable("SuggestionActivities");
+                });
+
+            modelBuilder.Entity("KaizenBoard.Domain.Entities.SuggestionSupport", b =>
+                {
+                    b.Property<Guid>("SuggestionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("SuggestionId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SuggestionSupports");
+                });
+
             modelBuilder.Entity("KaizenBoard.Domain.Entities.Template", b =>
                 {
                     b.Property<Guid>("Id")
@@ -222,6 +301,80 @@ namespace KaizenBoard.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Templates");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("da28c801-5d1f-4dfa-88ed-028b00eb0101"),
+                            Created = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ImprovementObject = "Оборудование или инструмент",
+                            IsActive = true,
+                            LastModified = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ProblemHint = "Какое оборудование или инструмент мешает работе?",
+                            SolutionHint = "Что нужно изменить или заменить?",
+                            Title = "Модернизация",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("da28c801-5d1f-4dfa-88ed-028b00eb0102"),
+                            Created = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ImprovementObject = "Рабочий процесс",
+                            IsActive = true,
+                            LastModified = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ProblemHint = "На каком шаге теряется время?",
+                            SolutionHint = "Какие шаги можно убрать или упростить?",
+                            Title = "Сокращение времени",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("da28c801-5d1f-4dfa-88ed-028b00eb0103"),
+                            Created = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ImprovementObject = "Безопасность",
+                            IsActive = true,
+                            LastModified = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ProblemHint = "Где возникает риск и кто с ним сталкивается?",
+                            SolutionHint = "Как устранить риск или снизить его?",
+                            Title = "Безопасность",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("da28c801-5d1f-4dfa-88ed-028b00eb0104"),
+                            Created = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ImprovementObject = "Операция контроля качества",
+                            IsActive = true,
+                            LastModified = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ProblemHint = "В каком месте процесса возникает дефект?",
+                            SolutionHint = "Как предупредить или раньше обнаружить дефект?",
+                            Title = "Качество",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("da28c801-5d1f-4dfa-88ed-028b00eb0105"),
+                            Created = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ImprovementObject = "Расход материалов или энергии",
+                            IsActive = true,
+                            LastModified = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ProblemHint = "Где возникает лишний расход?",
+                            SolutionHint = "Как уменьшить расход без потери качества?",
+                            Title = "Экономия ресурсов",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("da28c801-5d1f-4dfa-88ed-028b00eb0106"),
+                            Created = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ImprovementObject = "Рабочее место или процесс",
+                            IsActive = true,
+                            LastModified = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ProblemHint = "Что сейчас мешает выполнить работу?",
+                            SolutionHint = "Какое изменение поможет?",
+                            Title = "Другое",
+                            Type = 0
+                        });
                 });
 
             modelBuilder.Entity("KaizenBoard.Infrastructure.Identity.ApplicationUser", b =>
@@ -457,6 +610,30 @@ namespace KaizenBoard.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("KaizenBoard.Domain.Entities.SuggestionActivity", b =>
+                {
+                    b.HasOne("KaizenBoard.Domain.Entities.Suggestion", null)
+                        .WithMany("Activity")
+                        .HasForeignKey("SuggestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KaizenBoard.Domain.Entities.SuggestionSupport", b =>
+                {
+                    b.HasOne("KaizenBoard.Domain.Entities.Suggestion", null)
+                        .WithMany("Supports")
+                        .HasForeignKey("SuggestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KaizenBoard.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("KaizenBoard.Infrastructure.Identity.ApplicationUser", b =>
                 {
                     b.HasOne("KaizenBoard.Domain.Entities.Department", null)
@@ -514,6 +691,13 @@ namespace KaizenBoard.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("KaizenBoard.Domain.Entities.Suggestion", b =>
+                {
+                    b.Navigation("Activity");
+
+                    b.Navigation("Supports");
                 });
 #pragma warning restore 612, 618
         }

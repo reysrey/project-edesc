@@ -17,7 +17,8 @@ public static class SuggestionVisibility
         this IQueryable<Suggestion> source,
         string userId,
         IReadOnlyCollection<string>? roles,
-        Guid? userDepartmentId)
+        Guid? userDepartmentId,
+        bool boardEnabled)
     {
         var isManager = roles?.Contains(Roles.AdminL1) == true;
         var isModerator = roles?.Contains(Roles.AdminL2) == true;
@@ -34,6 +35,9 @@ public static class SuggestionVisibility
                 (userDepartmentId != null && s.TargetDepartmentId == userDepartmentId));
         }
 
+        if (!boardEnabled)
+            return source.Where(s => s.CreatedBy == userId);
+
         return source.Where(s =>
             s.CreatedBy == userId || s.Status != SuggestionStatus.Rejected);
     }
@@ -42,7 +46,11 @@ public static class SuggestionVisibility
         roles?.Contains(Roles.AdminL1) == true ||
         (roles?.Contains(Roles.AdminL2) == true && userDepartmentId == targetDepartmentId);
 
-    public static List<string> ComputeActions(SuggestionStatus status, bool isMine, bool canModerate)
+    public static bool CanSupport(SuggestionStatus status, bool isMine, bool supportEnabled) =>
+        supportEnabled && !isMine && status is not SuggestionStatus.Draft and not SuggestionStatus.Rejected;
+
+    public static List<string> ComputeActions(
+        SuggestionStatus status, bool isMine, bool canModerate, bool supportEnabled)
     {
         var actions = new List<string>();
         if (isMine && Suggestion.CanEdit(status))
@@ -51,6 +59,10 @@ public static class SuggestionVisibility
             actions.Add("submit");
         if (canModerate && Suggestion.CanBeModerated(status))
             actions.Add("moderate");
+        if (canModerate && status == SuggestionStatus.InCommission)
+            actions.Add("commission");
+        if (CanSupport(status, isMine, supportEnabled))
+            actions.Add("support");
 
         return actions;
     }

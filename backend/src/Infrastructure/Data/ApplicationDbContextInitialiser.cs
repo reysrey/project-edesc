@@ -157,5 +157,31 @@ public class ApplicationDbContextInitialiser
                     string.Join("; ", roleResult.Errors.Select(e => e.Description)));
             }
         }
+
+        var employeeEmail = "employee@localhost";
+        if (await _userManager.FindByEmailAsync(employeeEmail) is null)
+        {
+            var employee = new ApplicationUser
+            {
+                UserName = employeeEmail,
+                Email = employeeEmail,
+                FullName = "Сотрудник IdeaHub",
+                Position = "Сотрудник",
+                DepartmentId = defaultDept.Id
+            };
+            var result = await _userManager.CreateAsync(employee, "Mvp01Demo!2026");
+            if (result.Succeeded)
+                result = await _userManager.AddToRoleAsync(employee, Roles.User);
+            if (!result.Succeeded)
+                _logger.LogError("Не удалось подготовить сотрудника: {Errors}",
+                    string.Join("; ", result.Errors.Select(e => e.Description)));
+        }
+
+        foreach (var name in new[] { "Производство", "Контроль качества" })
+        {
+            if (!await _context.Departments.AnyAsync(d => d.Name == name))
+                _context.Departments.Add(new Department { Name = name });
+        }
+        await _context.SaveChangesAsync();
     }
 }

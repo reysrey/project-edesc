@@ -244,9 +244,9 @@ public class SecurityTests : TestBase
         mine!.TotalCount.ShouldBe(2);
         mine.Items.Single(s => s.Id == draft.Id).AuthorName.ShouldBe("author@example.test");
         mine.Items.Single(s => s.Id == draft.Id).AllowedActions.ShouldBe(new[] { "edit", "submit" });
-        mine.Items.Single(s => s.Id == revision.Id).AllowedActions.ShouldBe(new[] { "edit" });
-        (await ReadCard(author, revision.Id)).AllowedActions.ShouldBe(new[] { "edit" });
-        (await author.PostAsync($"{Suggestions}/{revision.Id}/submit", null)).StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        mine.Items.Single(s => s.Id == revision.Id).AllowedActions.ShouldBe(new[] { "edit", "submit" });
+        (await ReadCard(author, revision.Id)).AllowedActions.ShouldBe(new[] { "edit", "submit" });
+        (await author.PostAsync($"{Suggestions}/{revision.Id}/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await observer.GetAsync(route)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await observer.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         var observerMine = await observer.GetFromJsonAsync<PagedResult<SuggestionDto>>(Suggestions + "/search?scope=mine", JsonOptions);
@@ -271,7 +271,7 @@ public class SecurityTests : TestBase
 
         (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.Conflict);
-        (await ReadCard(moderator, draft.Id)).AllowedActions.ShouldBe(new[] { "moderate" });
+        (await ReadCard(moderator, draft.Id)).AllowedActions.ShouldContain("moderate");
         (await moderator.PostAsJsonAsync(route + "/return", new { reason = "Clarify the solution" }))
             .StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
@@ -305,7 +305,141 @@ public class SecurityTests : TestBase
             .StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var inCommission = await ReadCard(leader, draft.Id);
         inCommission.RegistrationNumber.ShouldBe("MVP-01-1");
-        inCommission.AllowedActions.ShouldBeEmpty();
+        inCommission.AllowedActions.ShouldContain("commission");
+    }
+
+    [Test]
+    public async Task Commission_actions_obey_department_version_and_history()
+    {
+        var department = await CreateDepartment("Commission");
+        var outside = await CreateDepartment("Outside");
+        await TestApp.RunAsUserAsync("author@example.test", FixturePassword, [Roles.User]);
+        var idea = await CreateIdea(department.Id, SuggestionStatus.Draft);
+        var second = await CreateIdea(department.Id, SuggestionStatus.InCommission);
+        await TestApp.RunAsUserAsync("moderator@example.test", FixturePassword, [Roles.AdminL2], department.Id);
+        await TestApp.RunAsUserAsync("outside@example.test", FixturePassword, [Roles.AdminL2], outside.Id);
+        await TestApp.RunAsUserAsync("leader@example.test", FixturePassword, [Roles.AdminL1]);
+        using var author = await Login("author@example.test");
+        using var moderator = await Login("moderator@example.test");
+        using var outsider = await Login("outside@example.test");
+        using var leader = await Login("leader@example.test");
+        var route = $"{Suggestions}/{idea.Id}";
+
+        (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PostAsJsonAsync(route + "/approve", new { regNumber = "COM-1" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var card = await ReadCard(moderator, idea.Id);
+        card.AllowedActions.ShouldContain("commission");
+        var decision = new { card.Version, note = "Уточните результат" };
+        (await author.PostAsJsonAsync(route + "/commission/return", decision)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await outsider.PostAsJsonAsync(route + "/commission/return", decision)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await moderator.PostAsJsonAsync(route + "/commission/return", decision)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await leader.PostAsJsonAsync(route + "/commission/reject", decision)).StatusCode.ShouldBe(HttpStatusCode.Conflict);
+
+        var returned = await ReadCard(author, idea.Id);
+        returned.Status.ShouldBe(SuggestionStatus.RevisionRequired);
+        returned.History.Select(h => h.ToStatus).ShouldBe(new[]
+        {
+            SuggestionStatus.RevisionRequired, SuggestionStatus.InCommission, SuggestionStatus.Submitted
+        });
+        returned.History[0].Note.ShouldBe(decision.note);
+        var notices = await author.GetFromJsonAsync<TestNotice[]>("/api/Users/notifications", JsonOptions);
+        notices!.Length.ShouldBe(2);
+        (await author.PostAsync(route + "/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PostAsJsonAsync(route + "/approve", new { regNumber = "COM-2" }))
+            .StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await moderator.PostAsJsonAsync(route + "/approve", new { regNumber = "COM-1" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var latest = await ReadCard(leader, idea.Id);
+        (await leader.PostAsJsonAsync(route + "/commission/approve", new { latest.Version }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await ReadCard(author, idea.Id)).Status.ShouldBe(SuggestionStatus.ApprovedPlanning);
+
+        var secondCard = await ReadCard(moderator, second.Id);
+        var rejection = $"{Suggestions}/{second.Id}/commission/reject";
+        (await moderator.PostAsJsonAsync(rejection, new { secondCard.Version, note = "" }))
+            .StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await moderator.PostAsJsonAsync(rejection, new { secondCard.Version, note = "Уже внедрено" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await ReadCard(author, second.Id)).Status.ShouldBe(SuggestionStatus.Rejected);
+    }
+
+    [Test]
+    public async Task Service_settings_control_support_anonymity_board_and_notifications()
+    {
+        var department = await CreateDepartment("Settings");
+        await TestApp.RunAsUserAsync("author@example.test", FixturePassword, [Roles.User]);
+        var idea = await CreateIdea(department.Id, SuggestionStatus.Submitted);
+        await TestApp.RunAsUserAsync("reader@example.test", FixturePassword, [Roles.User]);
+        await TestApp.RunAsUserAsync("leader@example.test", FixturePassword, [Roles.AdminL1]);
+        using var author = await Login("author@example.test");
+        using var reader = await Login("reader@example.test");
+        using var leader = await Login("leader@example.test");
+        var route = $"{Suggestions}/{idea.Id}";
+        const string settingsPath = "/api/ServiceSettings/";
+        var original = (await leader.GetFromJsonAsync<TestSettings>(settingsPath))!;
+
+        var responses = await Task.WhenAll(reader.PutAsync(route + "/support", null), reader.PutAsync(route + "/support", null));
+        responses.Select(r => r.StatusCode).ShouldAllBe(status => status == HttpStatusCode.NoContent);
+        var supported = await ReadCard(reader, idea.Id);
+        supported.SupportCount.ShouldBe(1);
+        supported.SupportedByMe.ShouldBeTrue();
+        (await author.PutAsync(route + "/support", null)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await reader.DeleteAsync(route + "/support")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await ReadCard(reader, idea.Id)).SupportCount.ShouldBe(0);
+
+        var changes = original with { SupportEnabled = false, AnonymousEnabled = true, NotificationsEnabled = false };
+        (await reader.PutAsJsonAsync(settingsPath, changes)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        var updated = await leader.PutAsJsonAsync(settingsPath, changes);
+        updated.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await leader.PutAsJsonAsync(settingsPath, changes)).StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await reader.PutAsync(route + "/support", null)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+        var created = await author.PostAsJsonAsync(Suggestions, new
+        {
+            title = "Anonymous", improvementObject = "Object", currentFlaws = "Problem", proposedSolution = "Solution",
+            targetDepartmentId = department.Id, isAnonymous = true
+        });
+        created.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var id = await created.Content.ReadFromJsonAsync<Guid>();
+        (await author.PostAsync($"{Suggestions}/{id}/submit", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var anonymous = await ReadCard(reader, id);
+        anonymous.AuthorName.ShouldBeNull();
+        anonymous.CreatedBy.ShouldBeNull();
+        var listing = await reader.GetFromJsonAsync<SuggestionDto[]>(Suggestions, JsonOptions);
+        listing!.Single(s => s.Id == id).CreatedBy.ShouldBeNull();
+        (await leader.PostAsJsonAsync(route + "/return", new { reason = "Измените" })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await author.GetFromJsonAsync<TestNotice[]>("/api/Users/notifications", JsonOptions))!.ShouldBeEmpty();
+
+        var latest = (await updated.Content.ReadFromJsonAsync<TestSettings>())!;
+        (await leader.PutAsJsonAsync(settingsPath, latest with { BoardEnabled = false })).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await reader.GetAsync($"{Suggestions}/{id}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await ReadCard(author, id)).IsMine.ShouldBeTrue();
+        (await leader.GetAsync($"{Suggestions}/{id}")).StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Test]
+    public async Task Directory_exposes_only_requested_users_to_leader()
+    {
+        var department = await CreateDepartment("Directory");
+        await TestApp.RunAsUserAsync("special@example.test", FixturePassword, [Roles.User], department.Id);
+        await TestApp.RunAsUserAsync("other@example.test", FixturePassword, [Roles.User]);
+        await TestApp.RunAsUserAsync("leader@example.test", FixturePassword, [Roles.AdminL1]);
+        using var employee = await Login("special@example.test");
+        using var leader = await Login("leader@example.test");
+        const string directory = "/api/Users/directory";
+        (await employee.GetAsync(directory)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        var matching = await leader.GetFromJsonAsync<PagedResult<TestDirectoryEntry>>(
+            $"{directory}?search=SPECIAL&role=User&departmentId={department.Id}");
+        matching!.TotalCount.ShouldBe(1);
+        var item = matching.Items.Single();
+        item.Email.ShouldBe("special@example.test");
+        item.DepartmentName.ShouldBe("Directory");
+        item.Roles.ShouldBe(new[] { Roles.User });
+
+        var response = await leader.GetStringAsync(directory);
+        response.ShouldNotContain("passwordHash");
+        response.ShouldNotContain("securityStamp");
     }
 
     private static async Task<HttpResponseMessage> Create(HttpClient client, SuggestionInput input, string? key = null)
@@ -351,6 +485,9 @@ public class SecurityTests : TestBase
 
     private sealed record SearchResult(SuggestionDto[] Items);
     private sealed record VersionResult(string Version);
+    private sealed record TestSettings(bool SupportEnabled, bool AnonymousEnabled, bool NotificationsEnabled, bool BoardEnabled, Guid Version);
+    private sealed record TestNotice(Guid SuggestionId, SuggestionStatus Status);
+    private sealed record TestDirectoryEntry(string Email, string DepartmentName, string[] Roles);
     private sealed record SuggestionInput(
         string Title, string CurrentFlaws, string ProposedSolution, string ImprovementObject,
         Guid TargetDepartmentId, Guid? TemplateId = null);

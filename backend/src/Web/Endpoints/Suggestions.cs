@@ -1,6 +1,8 @@
 using KaizenBoard.Application.Common.Models;
 using KaizenBoard.Application.Features.Suggestions.Commands.ApproveByManagerCommand;
 using KaizenBoard.Application.Features.Suggestions.Commands.CreateSuggestion;
+using KaizenBoard.Application.Features.Suggestions.Commands.DecideByCommission;
+using KaizenBoard.Application.Features.Suggestions.Commands.SupportSuggestion;
 using KaizenBoard.Application.Features.Suggestions.Commands.ReturnByManager;
 using KaizenBoard.Application.Features.Suggestions.Commands.SubmitSuggestion;
 using KaizenBoard.Application.Features.Suggestions.Queries.GetSuggestions;
@@ -35,6 +37,9 @@ public class Suggestions : IEndpointGroup
             .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
         groupBuilder.MapPost(ApproveByManager, "{id}/approve");
         groupBuilder.MapPost(ReturnByManager, "{id}/return");
+        groupBuilder.MapPost(DecideByCommission, "{id}/commission/{decision}");
+        groupBuilder.MapPut(SetSupport, "{id}/support");
+        groupBuilder.MapDelete(RemoveSupport, "{id}/support");
     }
 
     public static async Task<Created<Guid>> CreateSuggestion(
@@ -114,6 +119,25 @@ public class Suggestions : IEndpointGroup
         await sender.Send(command);
         return TypedResults.NoContent();
     }
+
+    public static async Task<NoContent> DecideByCommission(
+        ISender sender, Guid id, string decision, CommissionDecision body)
+    {
+        await sender.Send(new DecideByCommissionCommand(id, decision, body.Version, body.Note));
+        return TypedResults.NoContent();
+    }
+
+    public static Task<NoContent> SetSupport(ISender sender, Guid id) => ChangeSupport(sender, id, true);
+
+    public static Task<NoContent> RemoveSupport(ISender sender, Guid id) => ChangeSupport(sender, id, false);
+
+    private static async Task<NoContent> ChangeSupport(ISender sender, Guid id, bool supported)
+    {
+        await sender.Send(new SetSuggestionSupportCommand(id, supported));
+        return TypedResults.NoContent();
+    }
+
+    public record CommissionDecision(string Version, string? Note);
 }
 
 public record UpdateSuggestionResponse(string Version);

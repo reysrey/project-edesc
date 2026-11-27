@@ -36,11 +36,12 @@ public sealed class SearchSuggestionsQueryHandler
         var isManager = roles.Contains(Roles.AdminL1);
         var isModerator = roles.Contains(Roles.AdminL2);
         var userDepartmentId = _user.DepartmentId;
+        var settings = await _context.ReadServiceSettingsAsync(cancellationToken);
 
         // 1. Применяем видимость (B03.1) ДО всех фильтров
         var query = _context.Suggestions
             .AsNoTracking()
-            .ApplyVisibility(userId, roles, userDepartmentId);
+            .ApplyVisibility(userId, roles, userDepartmentId, settings.BoardEnabled);
 
         // 2. Применяем scope (сужает, не расширяет)
         query = (request.Scope ?? "board") switch
@@ -116,7 +117,10 @@ public sealed class SearchSuggestionsQueryHandler
                 s.Title,
                 s.Status,
                 s.Created,
-                s.CreatedBy,
+                IsMine = s.CreatedBy == userId,
+                CreatedBy = s.IsAnonymous && s.CreatedBy != userId ? null : s.CreatedBy,
+                SupportCount = s.Supports.Count,
+                SupportedByMe = s.Supports.Any(r => r.UserId == userId),
                 s.TargetDepartmentId,
                 s.ImprovementObject,
                 CurrentFlaws = s.CurrentFlaws.Length > 201 ? s.CurrentFlaws.Substring(0, 201) : s.CurrentFlaws,
@@ -139,9 +143,11 @@ public sealed class SearchSuggestionsQueryHandler
             DepartmentName = departments.GetValueOrDefault(s.TargetDepartmentId),
             ImprovementObject = s.ImprovementObject,
             ShortDescription = Shorten(s.CurrentFlaws, s.ProposedSolution),
+            SupportCount = s.SupportCount,
+            SupportedByMe = s.SupportedByMe,
             AllowedActions = SuggestionVisibility.ComputeActions(
-                s.Status, s.CreatedBy == userId,
-                SuggestionVisibility.CanModerate(roles, userDepartmentId, s.TargetDepartmentId)),
+                s.Status, s.IsMine,
+                SuggestionVisibility.CanModerate(roles, userDepartmentId, s.TargetDepartmentId), settings.SupportEnabled),
         }).ToList();
 
         return new PagedResult<SuggestionDto>

@@ -16,6 +16,7 @@ public class UpdateSuggestionCommand : IRequest<string>
 
     // Шаблон заявки; null — снять привязку.
     public Guid? TemplateId { get; set; }
+    public bool? IsAnonymous { get; set; }
 
     // Версия из GET /{id}; при расхождении сервер отвечает 409.
     public string Version { get; set; } = string.Empty;

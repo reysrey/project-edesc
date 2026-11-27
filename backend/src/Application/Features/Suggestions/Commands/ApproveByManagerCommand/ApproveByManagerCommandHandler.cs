@@ -28,7 +28,10 @@ public class ApproveByManagerCommandHandler : IRequestHandler<ApproveByManagerCo
         if (!SuggestionVisibility.CanModerate(_user.Roles, _user.DepartmentId, suggestion.TargetDepartmentId))
             throw new ForbiddenAccessException();
 
+        var settings = await _context.ReadServiceSettingsAsync(cancellationToken);
+        var previous = suggestion.Status;
         suggestion.ApproveByManager(request.RegNumber);
+        suggestion.RecordActivity(previous, _user.Id!, null, settings.NotificationsEnabled);
         await _context.SaveChangesAsync(cancellationToken);
         
         return Unit.Value;

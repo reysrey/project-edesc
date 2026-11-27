@@ -11,6 +11,7 @@ public class SuggestionDetailsDto
     public string? CreatedBy { get; set; }
     public string? AuthorName { get; set; }
     public bool IsMine { get; set; }
+    public bool IsAnonymous { get; set; }
     public Guid TargetDepartmentId { get; set; }
     public string? DepartmentName { get; set; }
     public string ImprovementObject { get; set; } = string.Empty;
@@ -23,8 +24,14 @@ public class SuggestionDetailsDto
     public string? CommissionNote { get; set; }
     public List<string> AllowedActions { get; set; } = [];
     public int SubmissionCount { get; set; }
+    public int SupportCount { get; set; }
+    public bool SupportedByMe { get; set; }
+    public List<SuggestionActivityDto> History { get; set; } = [];
 
     // Непрозрачный маркер конкурентного изменения.
     // Клиент возвращает его в PUT, при устаревании сервер отвечает 409.
     public string Version { get; set; } = string.Empty;
 }
+
+public record SuggestionActivityDto(
+    Guid Id, DateTimeOffset OccurredAt, SuggestionStatus FromStatus, SuggestionStatus ToStatus, string? Note);

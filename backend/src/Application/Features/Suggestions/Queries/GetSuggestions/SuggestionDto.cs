@@ -15,5 +15,7 @@ public class SuggestionDto
     public string? DepartmentName { get; set; }
     public string ImprovementObject { get; set; } = string.Empty;
     public string ShortDescription { get; set; } = string.Empty;
+    public int SupportCount { get; set; }
+    public bool SupportedByMe { get; set; }
     public List<string> AllowedActions { get; set; } = [];
 }

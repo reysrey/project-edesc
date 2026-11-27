@@ -30,7 +30,9 @@ public class SubmitSuggestionCommandHandler : IRequestHandler<SubmitSuggestionCo
         if (suggestion.CreatedBy != _user.Id)
             throw new ForbiddenAccessException();
 
+        var previous = suggestion.Status;
         suggestion.Submit();
+        suggestion.RecordActivity(previous, _user.Id!, null, false);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;

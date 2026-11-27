@@ -73,6 +73,11 @@ public class UpdateSuggestionCommandHandler : IRequestHandler<UpdateSuggestionCo
             }
         }
 
+        if (request.IsAnonymous == true && !suggestion.IsAnonymous &&
+            !(await _context.ReadServiceSettingsAsync(cancellationToken)).AnonymousEnabled)
+            throw new ValidationException([new ValidationFailure(nameof(request.IsAnonymous), "Анонимная подача отключена.")]);
+
+        suggestion.IsAnonymous = request.IsAnonymous ?? suggestion.IsAnonymous;
         suggestion.Title = request.Title;
         suggestion.CurrentFlaws = request.CurrentFlaws;
         suggestion.ProposedSolution = request.ProposedSolution;

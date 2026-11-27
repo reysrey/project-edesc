@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 using KaizenBoard.Application.Common.Security;
 using MediatR;
 
@@ -18,4 +19,6 @@ public record CreateSuggestionInput
     public Guid TargetDepartmentId { get; init; }
 
     public Guid? TemplateId { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsAnonymous { get; init; }
 }

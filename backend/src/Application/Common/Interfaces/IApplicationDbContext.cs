@@ -9,4 +9,7 @@ public interface IApplicationDbContext
     DbSet<Department> Departments { get; }
     DbSet<Suggestion> Suggestions { get; }
     DbSet<Template> Templates { get; }
+    DbSet<ServiceSettings> ServiceSettings { get; }
+    DbSet<SuggestionSupport> SuggestionSupports { get; }
+    DbSet<SuggestionActivity> SuggestionActivities { get; }
 }

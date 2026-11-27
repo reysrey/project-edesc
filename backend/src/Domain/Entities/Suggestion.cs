@@ -21,6 +21,9 @@ public class Suggestion: BaseAuditableEntity
     public string ExpectedResultAfter  { get; set; } = string.Empty;
     public SuggestionStatus Status { get; set; } = SuggestionStatus.Draft;
     public int SubmissionCount { get; private set; }
+    public bool IsAnonymous { get; set; }
+    public ICollection<SuggestionSupport> Supports { get; } = new List<SuggestionSupport>();
+    public ICollection<SuggestionActivity> Activity { get; } = new List<SuggestionActivity>();
     public DateTime? StatusDeadlineAt { get; set; }
     public string? CommissionNote { get; set; } = string.Empty;
     public Guid? HelperDepartmentId { get; set; }
@@ -31,11 +34,10 @@ public class Suggestion: BaseAuditableEntity
     public decimal? EconomicEffectAmount { get; set; }
     public decimal? RewardAmount { get; set; }
 
-    public static bool CanEdit(SuggestionStatus status) =>
-        CanSubmit(status) || status == SuggestionStatus.RevisionRequired;
+    public static bool CanEdit(SuggestionStatus status) => CanSubmit(status);
 
     public static bool CanSubmit(SuggestionStatus status) =>
-        status is SuggestionStatus.Draft or SuggestionStatus.ReturnedByManager;
+        status is SuggestionStatus.Draft or SuggestionStatus.ReturnedByManager or SuggestionStatus.RevisionRequired;
 
     public static bool CanBeModerated(SuggestionStatus status) =>
         status == SuggestionStatus.Submitted;
@@ -55,6 +57,8 @@ public class Suggestion: BaseAuditableEntity
             throw new InvalidOperationException("Одобрить можно только заявку, которая находится на проверке у руководителя.");
         if (string.IsNullOrWhiteSpace(regNumber))
             throw new ArgumentException("Регистрационный номер не может быть пустым.", nameof(regNumber));
+        if (RegistrationNumber is not null && RegistrationNumber != regNumber)
+            throw new InvalidOperationException("При повторной передаче сохраняется исходный регистрационный номер.");
 
         Status = SuggestionStatus.InCommission;
         RegistrationNumber = regNumber;
@@ -85,6 +89,42 @@ public class Suggestion: BaseAuditableEntity
             throw new ArgumentException("Необходимо указать причину отклонения.", nameof(reason));
 
         Status = SuggestionStatus.Rejected;
+        StatusDeadlineAt = null;
         CommissionNote = reason;
+    }
+
+    public void ApproveByCommission(string? note)
+    {
+        if (Status != SuggestionStatus.InCommission)
+            throw new InvalidOperationException("Одобрить можно только заявку, которая находится в комиссии.");
+
+        Status = SuggestionStatus.ApprovedPlanning;
+        StatusDeadlineAt = null;
+        CommissionNote = note;
+    }
+
+    public void ReturnByCommission(string reason)
+    {
+        if (Status != SuggestionStatus.InCommission)
+            throw new InvalidOperationException("Вернуть можно только заявку, которая находится в комиссии.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+
+        Status = SuggestionStatus.RevisionRequired;
+        StatusDeadlineAt = null;
+        CommissionNote = reason;
+    }
+
+    public void RecordActivity(SuggestionStatus previous, string actorId, string? note, bool notificationsEnabled)
+    {
+        Activity.Add(new SuggestionActivity
+        {
+            SuggestionId = Id,
+            ActorId = actorId,
+            OccurredAt = DateTimeOffset.UtcNow,
+            FromStatus = previous,
+            ToStatus = Status,
+            Note = note,
+            NotifyAuthor = notificationsEnabled && actorId != CreatedBy
+        });
     }
 }
