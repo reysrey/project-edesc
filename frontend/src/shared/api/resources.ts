@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { empty, json, request } from './client'
+import { empty, json, login, request } from './client'
 import {
   departmentSchema,
   employeeDirectorySchema,
@@ -31,8 +31,7 @@ export const api = {
     request('/ServiceSettings/', serviceSettingsSchema, { signal }),
   updateServiceSettings: (body: ServiceSettings) =>
     request('/ServiceSettings/', serviceSettingsSchema, json('PUT', body)),
-  login: (email: string, password: string) =>
-    request('/Users/login?useCookies=true', empty, json('POST', { email, password })),
+  login,
   register: (email: string, password: string) =>
     request('/Users/register', empty, json('POST', { email, password })),
   forgotPassword: (email: string) =>

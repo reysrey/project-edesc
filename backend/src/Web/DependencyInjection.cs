@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
 using KaizenBoard.Application.Common.Interfaces;
 using KaizenBoard.Infrastructure.Data;
+using KaizenBoard.Web.Infrastructure;
 using KaizenBoard.Web.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +18,12 @@ public static class DependencyInjection
         builder.Services.AddScoped<IUser, CurrentUser>();
 
         builder.Services.AddHttpContextAccessor();
+
+        foreach (var scheme in new[] { IdentityConstants.ApplicationScheme, IdentityConstants.TwoFactorUserIdScheme })
+        {
+            builder.Services.PostConfigure<CookieAuthenticationOptions>(scheme, options =>
+                options.CookieManager = new TabSessionCookieManager(options.CookieManager ?? new ChunkingCookieManager()));
+        }
 
         builder.Services.AddExceptionHandler<ProblemDetailsExceptionHandler>();
 

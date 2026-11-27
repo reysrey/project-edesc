@@ -23,6 +23,57 @@ public class SecurityTests : TestBase
     };
 
     [Test]
+    public async Task Browser_tabs_keep_their_own_sessions_when_sharing_cookies()
+    {
+        var accounts = new[]
+        {
+            (Email: "employee@example.test", Role: Roles.User, Tab: Guid.NewGuid()),
+            (Email: "moderator@example.test", Role: Roles.AdminL2, Tab: Guid.NewGuid()),
+            (Email: "leader@example.test", Role: Roles.AdminL1, Tab: Guid.NewGuid())
+        };
+        using var browser = FunctionalTestSetup.CreateClient();
+
+        foreach (var account in accounts)
+        {
+            await TestApp.RunAsUserAsync(account.Email, FixturePassword, [account.Role]);
+            using var response = await SendToTab(HttpMethod.Post, "/api/Users/login?useSessionCookies=true", account.Tab,
+                JsonContent.Create(new { email = account.Email, password = FixturePassword }));
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
+        using var unscopedProfile = await browser.GetAsync("/api/Users/me");
+        unscopedProfile.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+        foreach (var account in accounts)
+        {
+            await CheckProfile(account.Email, account.Role, account.Tab);
+        }
+
+        using var logout = await SendToTab(HttpMethod.Post, "/api/Users/logout", accounts[1].Tab, JsonContent.Create(new { }));
+        logout.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var signedOutProfile = await SendToTab(HttpMethod.Get, "/api/Users/me", accounts[1].Tab);
+        signedOutProfile.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        await CheckProfile(accounts[0].Email, accounts[0].Role, accounts[0].Tab);
+        await CheckProfile(accounts[2].Email, accounts[2].Role, accounts[2].Tab);
+
+        async Task CheckProfile(string email, string role, Guid tab)
+        {
+            using var response = await SendToTab(HttpMethod.Get, "/api/Users/me", tab);
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            var profile = await response.Content.ReadFromJsonAsync<TestProfile>();
+            profile!.Email.ShouldBe(email);
+            profile.Roles.ShouldBe([role]);
+        }
+
+        async Task<HttpResponseMessage> SendToTab(HttpMethod method, string path, Guid tab, HttpContent? content = null)
+        {
+            using var request = new HttpRequestMessage(method, path) { Content = content };
+            request.Headers.Add("X-IdeaHub-Tab", tab.ToString());
+            return await browser.SendAsync(request);
+        }
+    }
+
+    [Test]
     public async Task Detail_list_and_search_enforce_the_same_visibility()
     {
         var ownDepartment = await CreateDepartment("Internal");
@@ -488,6 +539,7 @@ public class SecurityTests : TestBase
     private sealed record TestSettings(bool SupportEnabled, bool AnonymousEnabled, bool NotificationsEnabled, bool BoardEnabled, Guid Version);
     private sealed record TestNotice(Guid SuggestionId, SuggestionStatus Status);
     private sealed record TestDirectoryEntry(string Email, string DepartmentName, string[] Roles);
+    private sealed record TestProfile(string Email, string[] Roles);
     private sealed record SuggestionInput(
         string Title, string CurrentFlaws, string ProposedSolution, string ImprovementObject,
         Guid TargetDepartmentId, Guid? TemplateId = null);

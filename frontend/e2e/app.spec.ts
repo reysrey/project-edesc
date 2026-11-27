@@ -280,7 +280,7 @@ async function server(
   return calls
 }
 
-test('cookie login handles invalid credentials and logout', async ({ page }) => {
+test('cookie login keeps its tab session through reload and logs out', async ({ page }) => {
   const calls = await server(page, { signedIn: false })
   await page.goto('/suggestions')
   await expect(page).toHaveURL(/login/)
@@ -289,7 +289,17 @@ test('cookie login handles invalid credentials and logout', async ({ page }) => 
   await page.getByRole('button', { name: 'Войти в IdeaHub' }).click()
   await expect(page.getByRole('alert')).toContainText('Неверная почта или пароль')
   await page.getByLabel('Пароль', { exact: true }).fill('Correct123!')
-  await page.getByRole('button', { name: 'Войти в IdeaHub' }).click()
+  const [login] = await Promise.all([
+    page.waitForRequest((request) => new URL(request.url()).pathname === '/api/Users/login'),
+    page.getByRole('button', { name: 'Войти в IdeaHub' }).click(),
+  ])
+  await expect(page.getByRole('heading', { name: /Добрый день/ })).toBeVisible()
+  const [profile] = await Promise.all([
+    page.waitForRequest((request) => request.url().endsWith('/api/Users/me')),
+    page.reload(),
+  ])
+  expect(login.headers()['x-ideahub-tab']).toMatch(/^[\da-f-]{36}$/)
+  expect(profile.headers()['x-ideahub-tab']).toBe(login.headers()['x-ideahub-tab'])
   await expect(page.getByRole('heading', { name: /Добрый день/ })).toBeVisible()
   await page.getByRole('button', { name: /^Выйти/ }).click()
   await expect(page).toHaveURL(/login/)
